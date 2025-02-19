@@ -17,8 +17,6 @@
     <div class="filter-section">
       <el-radio-group v-model="filterStatus" @change="handleFilterChange">
         <el-radio-button value="all">全部订单</el-radio-button>
-        <el-radio-button value="pending">待处理</el-radio-button>
-        <el-radio-button value="processing">处理中</el-radio-button>
         <el-radio-button value="completed">已完成</el-radio-button>
         <el-radio-button value="cancelled">已取消</el-radio-button>
       </el-radio-group>
@@ -44,6 +42,11 @@
           <div class="order-info">
             <span class="order-number">订单号：{{ order.orderNumber }}</span>
             <span class="order-time">{{ order.createTime }}</span>
+          </div>
+          <div class="order-location">
+            <span class="canteen-name">{{ order.canteenName }}</span>
+            <el-divider direction="vertical" />
+            <span class="stall-name">{{ order.stallName }}</span>
           </div>
           <el-tag :type="getStatusType(order.status)" class="status-tag">
             {{ getStatusLabel(order.status) }}
@@ -123,12 +126,14 @@
     <el-dialog
       v-model="reviewDialogVisible"
       title="写评价"
-      width="50%">
-      <el-form :model="reviewForm" :rules="reviewRules" ref="reviewFormRef">
-        <el-form-item label="评分" prop="rating">
+      width="90%"
+      class="review-dialog">
+      <el-form :model="reviewForm" :rules="reviewRules" ref="reviewFormRef" label-position="top">
+        <el-form-item label="总体评分" prop="rating">
           <el-rate
             v-model="reviewForm.rating"
-            show-score>
+            show-score
+            score-template="{value}分">
           </el-rate>
         </el-form-item>
         <el-form-item label="评价内容" prop="content">
@@ -136,23 +141,39 @@
             type="textarea"
             v-model="reviewForm.content"
             :rows="4"
-            placeholder="请分享您的用餐体验...">
+            :maxlength="500"
+            show-word-limit
+            placeholder="请分享您的用餐体验，例如菜品口感、服务态度等...">
           </el-input>
         </el-form-item>
-        <el-form-item label="上传图片">
+        <el-form-item label="上传图片（最多4张）">
           <el-upload
             action="#"
             list-type="picture-card"
             :auto-upload="false"
             :on-change="handleImageChange"
-            :on-remove="handleImageRemove">
-            <el-icon><Plus /></el-icon>
+            :on-remove="handleImageRemove"
+            :limit="4"
+            :on-exceed="handleExceed"
+            accept=".jpg,.jpeg,.png">
+            <template #default>
+              <el-icon><Plus /></el-icon>
+              <div class="upload-text">点击上传</div>
+            </template>
+            <template #file="{ file }">
+              <img class="upload-preview" :src="file.url" alt="预览图"/>
+            </template>
           </el-upload>
+          <div class="upload-tip">支持 jpg/png 格式，单张不超过 5MB</div>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="reviewDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitReview">提交评价</el-button>
+        <div class="dialog-footer">
+          <el-button @click="reviewDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitReview" :loading="submitting">
+            提交评价
+          </el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -183,9 +204,10 @@ export default {
     const reviewDialogVisible = ref(false)
     const reviewFormRef = ref(null)
     const currentOrder = ref(null)
+    const submitting = ref(false)
 
     const reviewForm = ref({
-      rating: 0,
+      rating: 5,
       content: '',
       images: []
     })
@@ -196,7 +218,7 @@ export default {
       ],
       content: [
         { required: true, message: '请填写评价内容', trigger: 'blur' },
-        { min: 10, message: '评价内容至少10字', trigger: 'blur' }
+        { min: 10, max: 500, message: '评价内容需在10-500字之间', trigger: 'blur' }
       ]
     }
 
@@ -256,19 +278,6 @@ export default {
     const fetchOrders = async () => {
       loading.value = true
       try {
-        // 在实际开发中替换为真实的API调用
-        // const response = await request.get('/student/orders', {
-        //   params: {
-        //     page: currentPage.value,
-        //     pageSize: pageSize.value,
-        //     status: filterStatus.value,
-        //     startDate: dateRange.value?.[0],
-        //     endDate: dateRange.value?.[1]
-        //   }
-        // })
-        // orders.value = response.data.orders
-        // total.value = response.data.total
-
         // 测试数据
         orders.value = [
           {
@@ -277,6 +286,8 @@ export default {
             createTime: '2024-03-15 12:30:00',
             status: 'completed',
             totalAmount: 45.00,
+            canteenName: '第一食堂',
+            stallName: '川湘小炒',
             dishes: [
               {
                 id: 1,
@@ -298,8 +309,10 @@ export default {
             id: 2,
             orderNumber: 'ORD202403150002',
             createTime: '2024-03-15 18:45:00',
-            status: 'pending',
+            status: 'cancelled',
             totalAmount: 32.00,
+            canteenName: '第二食堂',
+            stallName: '粤式炖汤',
             dishes: [
               {
                 id: 3,
@@ -323,8 +336,6 @@ export default {
     // 获取状态标签
     const getStatusLabel = (status) => {
       const statusMap = {
-        'pending': '待处理',
-        'processing': '处理中',
         'completed': '已完成',
         'cancelled': '已取消'
       }
@@ -334,8 +345,6 @@ export default {
     // 获取状态标签类型
     const getStatusType = (status) => {
       const typeMap = {
-        'pending': 'warning',
-        'processing': 'primary',
         'completed': 'success',
         'cancelled': 'info'
       }
@@ -407,7 +416,7 @@ export default {
     const writeReview = (order) => {
       currentOrder.value = order
       reviewForm.value = {
-        rating: 0,
+        rating: 5,
         content: '',
         images: []
       }
@@ -416,13 +425,35 @@ export default {
 
     // 处理图片变化
     const handleImageChange = (file) => {
-      reviewForm.value.images.push(file.raw)
+      // 检查文件大小
+      const isLt5M = file.size / 1024 / 1024 < 5
+      if (!isLt5M) {
+        ElMessage.warning('图片大小不能超过 5MB!')
+        return false
+      }
+      
+      // 检查文件类型
+      const isValidType = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.raw.type)
+      if (!isValidType) {
+        ElMessage.warning('只能上传 JPG/PNG 格式的图片!')
+        return false
+      }
+
+      // 创建预览URL
+      file.url = URL.createObjectURL(file.raw)
+      reviewForm.value.images.push(file)
+    }
+
+    // 处理超出图片数量限制
+    const handleExceed = () => {
+      ElMessage.warning('最多只能上传4张图片')
     }
 
     // 处理图片移除
     const handleImageRemove = (file) => {
-      const index = reviewForm.value.images.indexOf(file.raw)
+      const index = reviewForm.value.images.findIndex(item => item.uid === file.uid)
       if (index > -1) {
+        URL.revokeObjectURL(file.url)
         reviewForm.value.images.splice(index, 1)
       }
     }
@@ -433,16 +464,10 @@ export default {
       
       try {
         await reviewFormRef.value.validate()
+        submitting.value = true
         
         // 在实际开发中替换为真实的API调用
-        // const formData = new FormData()
-        // formData.append('orderId', currentOrder.value.id)
-        // formData.append('rating', reviewForm.value.rating)
-        // formData.append('content', reviewForm.value.content)
-        // reviewForm.value.images.forEach(image => {
-        //   formData.append('images[]', image)
-        // })
-        // await request.post('/student/reviews', formData)
+        await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟API调用
         
         ElMessage.success('评价提交成功')
         reviewDialogVisible.value = false
@@ -452,6 +477,8 @@ export default {
           console.error('提交评价失败:', error)
           ElMessage.error('提交评价失败')
         }
+      } finally {
+        submitting.value = false
       }
     }
 
@@ -490,7 +517,9 @@ export default {
       handleImageChange,
       handleImageRemove,
       submitReview,
-      goBack
+      goBack,
+      submitting,
+      handleExceed
     }
   }
 }
@@ -571,10 +600,34 @@ export default {
 .order-header {
   margin-bottom: 10px;
   padding-bottom: 10px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .order-info {
+  display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+.order-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #606266;
+  font-size: 13px;
+}
+
+.order-location :deep(.el-divider--vertical) {
+  height: 12px;
+  margin: 0;
+}
+
+.canteen-name,
+.stall-name {
+  color: #409EFF;
 }
 
 .order-number {
@@ -717,6 +770,11 @@ export default {
     padding: 3px 6px;
     font-size: 11px;
   }
+  
+  .order-location {
+    font-size: 12px;
+    gap: 6px;
+  }
 }
 
 .order-history {
@@ -733,5 +791,53 @@ export default {
 .dish-item:hover {
   transform: none;
   background: #f8f9fa;
+}
+
+.review-dialog :deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+.review-dialog :deep(.el-form-item__label) {
+  font-weight: 500;
+  padding-bottom: 8px;
+}
+
+.review-dialog :deep(.el-rate) {
+  margin-top: 8px;
+}
+
+.upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 6px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media screen and (max-width: 393px) {
+  .review-dialog :deep(.el-dialog) {
+    width: 90% !important;
+    margin: 20px auto !important;
+  }
+
+  .review-dialog :deep(.el-form-item) {
+    margin-bottom: 16px;
+  }
 }
 </style>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 金鸡岭校区正门轮廓 -->
+  <path d="M960 200 L1060 200 L1060 400 L1160 400 L1160 600 L760 600 L760 400 L860 400 L860 200 Z" 
+        stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+  
+  <!-- 教学楼轮廓 -->
+  <path d="M400 300 L600 300 L600 500 L400 500 Z" 
+        stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+  
+  <!-- 图书馆轮廓 -->
+  <path d="M1320 300 L1520 300 L1520 500 L1320 500 Z" 
+        stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+  
+  <!-- 连接线和装饰元素 -->
+  <path d="M200 700 L1720 700" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4"/>
+  <path d="M300 800 L1620 800" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4"/>
+  
+  <!-- 电路板风格装饰 -->
+  <circle cx="960" cy="700" r="4" fill="currentColor"/>
+  <circle cx="400" cy="700" r="4" fill="currentColor"/>
+  <circle cx="1520" cy="700" r="4" fill="currentColor"/>
+  
+  <path d="M960 700 L960 800" stroke="currentColor" stroke-width="1"/>
+  <path d="M400 700 L400 800" stroke="currentColor" stroke-width="1"/>
+  <path d="M1520 700 L1520 800" stroke="currentColor" stroke-width="1"/>
+  
+  <!-- 数字化装饰元素 -->
+  <text x="920" y="750" fill="currentColor" font-family="monospace" font-size="12">10110</text>
+  <text x="360" y="750" fill="currentColor" font-family="monospace" font-size="12">01001</text>
+  <text x="1480" y="750" fill="currentColor" font-family="monospace" font-size="12">11010</text>
+</svg> 

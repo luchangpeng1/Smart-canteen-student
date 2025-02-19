@@ -12,12 +12,12 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue'),
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: false, title: '登录' }
   },
   {
     path: '/student',
     component: () => import('../views/student/Layout.vue'),
-    meta: { requiresAuth: true, role: 'student', needLogin: true },
+    meta: { requiresAuth: true, role: 'student', title: '学生端' },
     children: [
       {
         path: '',
@@ -26,17 +26,20 @@ const routes = [
       {
         path: 'home',
         name: 'StudentHome',
-        component: () => import('../views/student/DishList.vue')
+        component: () => import('../views/student/DishList.vue'),
+        meta: { title: '首页', keepAlive: true }
       },
       {
         path: 'orders',
         name: 'StudentOrders',
-        component: () => import('../views/student/OrderList.vue')
+        component: () => import('../views/student/OrderList.vue'),
+        meta: { title: '订单列表', keepAlive: true }
       },
       {
         path: 'profile',
         name: 'StudentProfile',
-        component: () => import('../views/student/UserProfile.vue')
+        component: () => import('../views/student/UserProfile.vue'),
+        meta: { title: '个人中心' }
       },
       {
         path: 'transactions',
@@ -112,112 +115,27 @@ const routes = [
           requiresAuth: true
         }
       },
-    ]
-  },
-  {
-    path: '/admin',
-    component: () => import('../views/admin/Layout.vue'),
-    meta: { requiresAuth: true, role: 'admin' },
-    children: [
       {
-        path: '',
-        redirect: 'dashboard'
+        path: 'points-rules',
+        component: () => import('../views/student/个人主页相关页面/PointsRules.vue')
       },
       {
-        path: 'dashboard',
-        name: 'AdminDashboard',
-        component: () => import('../views/admin/Dashboard.vue'),
-        meta: { title: '数据看板' }
+        path: 'points-exchange',
+        component: () => import('../views/student/个人主页相关页面/PointsExchange.vue')
       },
       {
-        path: 'dishes',
-        name: 'AdminDishes',
-        component: () => import('../views/admin/DishManagement.vue'),
-        meta: { title: '菜品管理' }
-      },
-      {
-        path: 'menus',
-        name: 'AdminMenus',
-        component: () => import('../views/admin/MenuManagement.vue'),
-        meta: { title: '菜单管理' }
-      },
-      {
-        path: 'orders',
-        name: 'AdminOrders',
-        component: () => import('../views/admin/OrderManagement.vue'),
-        meta: { title: '订单管理' }
-      },
-      {
-        path: 'windows',
-        name: 'AdminWindows',
-        component: () => import('../views/admin/WindowManagement.vue'),
-        meta: { title: '窗口管理' }
-      },
-      {
-        path: 'inventory',
-        name: 'AdminInventory',
-        component: () => import('../views/admin/Inventory.vue'),
-        meta: { title: '库存管理' }
-      },
-      {
-        path: 'statistics',
-        name: 'AdminStatistics',
-        component: () => import('../views/admin/Statistics.vue'),
-        meta: { title: '营业统计' }
-      },
-      {
-        path: 'staff',
-        name: 'AdminStaff',
-        component: () => import('../views/admin/Staff.vue'),
-        meta: { title: '员工管理' }
+        path: '/student/current-orders/:id',
+        name: 'CurrentOrderDetail',
+        component: () => import('@/views/student/CurrentOrderDetail.vue'),
+        meta: {
+          title: '订单详情',
+          requiresAuth: true,
+          role: 'student'
+        }
       }
     ]
   },
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/login'
-  },
-  {
-    path: '/m/admin',
-    component: () => import('../views/mobile/admin/Layout.vue'),
-    meta: { requiresAuth: true, role: 'admin' },
-    children: [
-      {
-        path: '',
-        redirect: 'orders'
-      },
-      {
-        path: 'orders',
-        name: 'MobileAdminOrders',
-        component: () => import(/* webpackChunkName: "admin-orders" */ '@/views/mobile/admin/Orders.vue'),
-        meta: { keepAlive: true }
-      },
-      {
-        path: 'menu',
-        name: 'MobileAdminMenu',
-        component: () => import(/* webpackChunkName: "admin-menu" */ '@/views/mobile/admin/Menu.vue'),
-        meta: { keepAlive: true }
-      },
-      {
-        path: 'stats',
-        name: 'MobileAdminStats',
-        component: () => import(/* webpackChunkName: "admin-stats" */ '@/views/mobile/admin/Stats.vue'),
-        meta: { keepAlive: true }
-      },
-      {
-        path: 'withdraw',
-        name: 'AdminWithdraw',
-        component: () => import(/* webpackChunkName: "admin-withdraw" */ '@/views/mobile/admin/Withdraw.vue'),
-        meta: { keepAlive: true }
-      },
-      {
-        path: 'withdraw/history',
-        name: 'AdminWithdrawHistory',
-        component: () => import('../views/mobile/admin/WithdrawHistory.vue')
-      }
-    ]
-  },
-
+ 
 ]
 
 const router = createRouter({
@@ -231,19 +149,9 @@ router.beforeEach((to, from, next) => {
   const userInfo = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
   const userRole = userInfo?.verifiedInfo?.role
 
-  // 先处理移动端重定向
-  if (isMobile()) {
-    // 如果已经是移动端路径，不需要重定向
-    if (!to.path.startsWith('/m/')) {
-      if (to.path.startsWith('/admin')) {
-        next('/m/admin' + to.path.slice(6))
-        return
-      }
-      if (to.path.startsWith('/student')) {
-        next('/m/student' + to.path.slice(8))
-        return
-      }
-    }
+  // 设置页面标题
+  if (to.meta.title) {
+    document.title = `${to.meta.title} - GUET智慧食堂`
   }
 
   // 处理根路径
@@ -252,54 +160,42 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  // 如果访问需要登录的页面但没有登录，重定向到登录页
+  if (to.meta.requiresAuth && (!token || !userInfo)) {
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath }
+    })
+    return
+  }
+
   // 如果已登录且访问登录页，重定向到对应的首页
   if (to.path === '/login' && token && userInfo) {
-    console.log('当前用户角色:', userRole)
-    
-    switch(userRole) {
-      case 'superadmin':
-        next('/admin/dishes')
-        return
-      case 'window_admin':
-        next('/m/admin/orders')
-        return
-      case 'student':
-        next('/student/home')
-        return
-      default:
-        next()
-        return
-    }
-  }
-
-  // 需要登录的页面
-  if (to.meta.requiresAuth) {
-    if (!token || !userInfo) {
+    if (userRole === 'student') {
+      next('/student/home')
+    } else {
+      // 处理无效角色
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
       next('/login')
-      return
     }
-
-    // 检查角色权限
-    if (to.meta.role === 'admin') {
-      if (userRole === 'superadmin') {
-        if (to.path.startsWith('/m/')) {
-          next('/admin/dishes')
-          return
-        }
-      } else if (userRole === 'window_admin') {
-        if (!to.path.startsWith('/m/')) {
-          next('/m/admin/orders')
-          return
-        }
-      } else {
-        next('/login')
-        return
-      }
-    }
+    return
   }
 
-  // 如果没有特殊情况，正常放行
+  // 检查角色权限
+  if (to.meta.role && to.meta.role !== userRole) {
+    next('/login')
+    return
+  }
+
+  // 正常放行
   next()
+})
+
+// 路由错误处理
+router.onError((error) => {
+  console.error('路由错误:', error)
+  // 可以在这里添加错误处理逻辑，比如显示错误提示或重定向到错误页面
 })
 
 export default router 

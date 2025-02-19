@@ -2,6 +2,7 @@ import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import router from '../router'
 import Result from '@/utils/result'
+import { useUserStore } from '@/stores/user'
 
 // 创建 axios 实例
 const service = axios.create({
@@ -25,10 +26,9 @@ let requests = []
 // 请求拦截器
 service.interceptors.request.use(
   config => {
-    // 从 localStorage 获取 token
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+    const userStore = useUserStore()
+    if (userStore.token) {
+      config.headers['Authorization'] = `Bearer ${userStore.token}`
     }
 
     // 处理请求数据
@@ -46,7 +46,6 @@ service.interceptors.request.use(
     return config
   },
   error => {
-    console.error('请求拦截器错误:', error)
     return Promise.reject(error)
   }
 )

@@ -1,65 +1,20 @@
 <template>
-  <div class="order-list">
-    <div class="page-header">
-      <div class="header-left">
-        <h2 class="page-title">我的订单</h2>
-        <div class="order-stats">
-          <div class="stat-card">
-            <span class="stat-item">
-              <strong>{{ ongoingOrders.length }}</strong>
-              <span>进行中</span>
-              <small>预计15分钟内可取餐</small>
-            </span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-item">
-              <strong>{{ completedOrders.length }}</strong>
-              <span>已完成</span>
-              <small>本周已完成订单</small>
-            </span>
+  <div class="order-list-container">
+    <div class="order-list">
+      <div class="page-header">
+        <div class="header-left">
+          <h2 class="page-title">我的订单</h2>
+          <div class="order-stats">
+            <div class="stat-card">
+              <span class="stat-item">
+                <strong>{{ ongoingOrders.length }}</strong>
+                <span>进行中</span>
+                <small>预计15分钟内可取餐</small>
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="header-actions">
-        <el-button class="refresh-btn" @click="refreshOrders">
-          <el-icon><Refresh /></el-icon>
-          刷新
-        </el-button>
-        <el-button 
-          type="primary" 
-          class="history-btn"
-          @click="goToHistory">
-          <el-icon><Calendar /></el-icon>
-          历史订单
-        </el-button>
-      </div>
-    </div>
-
-    <div v-if="hasReadyOrder" class="order-alert">
-      <el-alert
-        type="success"
-        show-icon
-        :closable="false">
-        <template #title>
-          <span class="alert-content">
-            您有订单可以取餐啦！请尽快前往取餐点取餐
-            <el-button type="success" link @click="scrollToReadyOrder">
-              查看订单 <el-icon><ArrowRight /></el-icon>
-            </el-button>
-          </span>
-        </template>
-      </el-alert>
-    </div>
-
-    <el-tabs v-model="activeTab" class="custom-tabs">
-      <el-tab-pane label="进行中" name="ongoing">
-        <div class="filter-bar">
-          <el-radio-group v-model="orderFilter" size="small">
-            <el-radio-button value="all">全部</el-radio-button>
-            <el-radio-button value="ordered">已结单</el-radio-button>
-            <el-radio-button value="preparing">制作中</el-radio-button>
-            <el-radio-button value="ready">待取餐</el-radio-button>
-          </el-radio-group>
+        <div class="header-actions">
           <el-input
             v-model="searchKeyword"
             placeholder="搜索订单..."
@@ -67,164 +22,224 @@
             clearable
             class="search-input"
           />
+          <el-button class="refresh-btn" @click="refreshOrders">
+            <el-icon><Refresh /></el-icon>
+            刷新
+          </el-button>
+          <el-button 
+            type="primary" 
+            class="history-btn"
+            @click="goToHistory">
+            <el-icon><Calendar /></el-icon>
+            历史订单
+          </el-button>
         </div>
+      </div>
 
-        <el-empty 
-          v-if="filteredOngoingOrders.length === 0" 
-          description="暂无进行中的订单"
-          :image-size="120">
-          <template #image>
-            <el-icon class="empty-icon"><TakeawayBox /></el-icon>
+      <div v-if="hasReadyOrder" class="order-alert">
+        <el-alert
+          type="success"
+          show-icon
+          :closable="false">
+          <template #title>
+            <span class="alert-content">
+              您有订单可以取餐啦！请尽快前往取餐点取餐
+              <el-button type="success" link @click="scrollToReadyOrder">
+                查看订单 <el-icon><ArrowRight /></el-icon>
+              </el-button>
+            </span>
           </template>
-          <template #description>
-            <p class="empty-text">暂无进行中的订单</p>
-            <el-button type="primary" @click="goToHome">去点餐</el-button>
-          </template>
-        </el-empty>
-        
-        <div class="order-grid">
-          <el-card 
-            v-for="order in filteredOngoingOrders" 
-            :key="order.id" 
-            class="order-card"
-            :class="{ 'ready-status': order.status === 'ready' }"
-            :ref="order.status === 'ready' ? 'readyOrder' : null">
-            <div class="status-badge" :class="order.status">
-              {{ getStatusText(order.status) }}
-            </div>
-            
-            <div class="order-header">
-              <div class="window-info">
-                <el-icon><Shop /></el-icon>
-                <span class="window-name">{{ order.windowName }}</span>
+        </el-alert>
+      </div>
+
+      <el-tabs v-model="activeTab" class="custom-tabs">
+        <el-tab-pane label="进行中" name="ongoing">
+          <div class="filter-bar">
+            <el-radio-group v-model="orderFilter" size="small">
+              <el-radio-button value="all">全部</el-radio-button>
+              <el-radio-button value="preparing">制作中</el-radio-button>
+              <el-radio-button value="ready">待取餐</el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <el-empty 
+            v-if="filteredOngoingOrders.length === 0" 
+            description="暂无进行中的订单"
+            :image-size="120">
+            <template #image>
+              <el-icon class="empty-icon"><TakeawayBox /></el-icon>
+            </template>
+            <template #description>
+              <p class="empty-text">暂无进行中的订单</p>
+              <el-button type="primary" @click="goToHome">去点餐</el-button>
+            </template>
+          </el-empty>
+          
+          <div class="order-grid">
+            <el-card 
+              v-for="order in filteredOngoingOrders" 
+              :key="order.id" 
+              class="order-card"
+              :class="{ 'ready-status': order.status === 'ready' }"
+              :ref="order.status === 'ready' ? 'readyOrder' : null">
+              <div class="status-badge" :class="order.status">
+                {{ getStatusText(order.status) }}
               </div>
-              <span class="order-time">{{ order.createTime }}</span>
-            </div>
-
-            <div class="order-content">
-              <div class="dish-list">
-                <div class="dish-item" v-for="dish in order.dishes" :key="dish.id">
-                  <div class="dish-image">
-                    <img :src="dish.image_url" :alt="dish.name">
+              
+              <div class="order-header">
+                <div class="window-info">
+                  <el-icon><Shop /></el-icon>
+                  <div class="location-info">
+                    <span class="canteen-name">{{ order.canteenName }}</span>
+                    <span class="window-name">{{ order.windowName }}</span>
                   </div>
-                  <div class="dish-content">
-                    <div class="dish-info">
-                      <div class="dish-name-wrapper">
-                        <span class="dish-name">{{ dish.name }}</span>
-                      </div>
-                      <div class="dish-price-wrapper">
-                        <span class="dish-quantity">x{{ dish.quantity }}</span>
-                        <span class="dish-price">¥{{ dish.price.toFixed(2) }}</span>
+                </div>
+                <span class="order-time">{{ order.createTime }}</span>
+              </div>
+
+              <div class="order-content">
+                <div class="dish-list">
+                  <div class="dish-item" v-for="dish in order.dishes" :key="dish.id">
+                    <div class="dish-image">
+                      <img :src="dish.image_url" :alt="dish.name">
+                    </div>
+                    <div class="dish-content">
+                      <div class="dish-info">
+                        <div class="dish-name-wrapper">
+                          <span class="dish-name">{{ dish.name }}</span>
+                        </div>
+                        <div class="dish-price-wrapper">
+                          <span class="dish-quantity">x{{ dish.quantity }}</span>
+                          <span class="dish-price">¥{{ dish.price.toFixed(2) }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                <div class="order-progress" v-if="order.status !== 'cancelled'">
+                  <el-steps :active="getProgressStep(order.status)" finish-status="success">
+                    <el-step title="已接单" />
+                    <el-step title="制作中" />
+                    <el-step title="待取餐" />
+                  </el-steps>
+                </div>
+
+                <div class="order-footer">
+                  <div class="price-info">
+                    <span class="total-label">合计</span>
+                    <span class="total-price">¥{{ order.totalPrice.toFixed(2) }}</span>
+                  </div>
+                  <div class="actions">
+                    <el-popconfirm
+                      v-if="order.status === 'ordered'"
+                      title="确定要取消订单吗？"
+                      confirm-button-text="确定"
+                      cancel-button-text="再想想"
+                      @confirm="cancelOrder(order)">
+                      <template #reference>
+                        <el-button type="danger" plain size="small">
+                          取消订单
+                        </el-button>
+                      </template>
+                    </el-popconfirm>
+                    <el-button 
+                      type="primary" 
+                      link
+                      size="small"
+                      @click="viewOrderDetail(order)">
+                      查看详情
+                    </el-button>
+                  </div>
+                </div>
               </div>
 
-              <div class="order-progress" v-if="order.status !== 'cancelled'">
-                <el-steps :active="getProgressStep(order.status)" finish-status="success">
-                  <el-step title="已接单" />
-                  <el-step title="制作中" />
-                  <el-step title="待取餐" />
-                </el-steps>
+              <div class="waiting-time" v-if="order.status === 'preparing'">
+                <el-icon><Timer /></el-icon>
+                预计等待时间：{{ order.estimatedTime || '15' }}分钟
               </div>
 
-              <div class="order-footer">
-                <div class="price-info">
-                  <span class="total-label">合计</span>
-                  <span class="total-price">¥{{ order.totalPrice.toFixed(2) }}</span>
+              <div class="pickup-info" v-if="order.status === 'ready'">
+                <div class="pickup-header">
+                  <el-icon><Bell /></el-icon>
+                  <span>您的餐品已准备就绪</span>
                 </div>
-                <div class="actions">
-                  <el-popconfirm
-                    v-if="order.status === 'ordered'"
-                    title="确定要取消订单吗？"
-                    confirm-button-text="确定"
-                    cancel-button-text="再想想"
-                    @confirm="cancelOrder(order)">
-                    <template #reference>
-                      <el-button type="danger" plain size="small">
-                        取消订单
-                      </el-button>
-                    </template>
-                  </el-popconfirm>
+                <div class="pickup-location">
+                  取餐点：{{ order.pickupLocation || '一楼取餐处' }}
+                </div>
+                <el-button 
+                  type="success" 
+                  class="show-qr-btn" 
+                  @click="showQRCode(order)">
+                  <el-icon><Ticket /></el-icon>
+                  显示取餐码
+                </el-button>
+                <div class="pickup-tips">
+                  <p>请在15分钟内完成取餐</p>
+                  <p>为保证餐品品质，请尽快取餐</p>
                 </div>
               </div>
+            </el-card>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+
+      <el-dialog
+        v-model="qrDialogVisible"
+        title="取餐码"
+        width="300px"
+        center
+        class="qr-dialog"
+        :show-close="true"
+        :close-on-click-modal="false"
+        :modal="false">
+        <div class="qr-dialog-content">
+          <div class="qr-header">
+            <div class="window-info">
+              <span class="canteen-name">{{ currentOrder?.canteenName }}</span>
+              <span class="window-name">{{ currentOrder?.windowName }}</span>
+              <span class="pickup-location">{{ currentOrder?.pickupLocation }}</span>
             </div>
+            <div class="order-info">
+              <span class="order-time">{{ currentOrder?.createTime }}</span>
+              <span class="order-amount">¥{{ currentOrder?.totalPrice.toFixed(2) }}</span>
+            </div>
+          </div>
+          
+          <div class="qr-code-wrapper">
+            <qrcode-vue
+              v-if="currentOrder"
+              :value="generateQRValue(currentOrder)"
+              :size="200"
+              level="H"
+              class="pickup-qr"
+              render-as="svg"
+            />
+            <div class="qr-border"></div>
+          </div>
 
-            <div class="waiting-time" v-if="order.status === 'preparing'">
+          <div class="qr-footer">
+            <div class="qr-tip">
+              <el-icon><Ticket /></el-icon>
+              <span>请向取餐人员出示此码</span>
+            </div>
+            <div class="validity-info">
               <el-icon><Timer /></el-icon>
-              预计等待时间：{{ order.estimatedTime || '15' }}分钟
+              <span>有效期15分钟</span>
             </div>
+          </div>
+        </div>
+      </el-dialog>
 
-            <div class="pickup-info" v-if="order.status === 'ready'">
-              <div class="pickup-header">
-                <el-icon><Bell /></el-icon>
-                <span>您的餐品已准备就绪</span>
-              </div>
-              <div class="pickup-location">
-                取餐点：{{ order.pickupLocation || '一楼取餐处' }}
-              </div>
-              <el-button 
-                type="success" 
-                class="show-qr-btn" 
-                @click="showQRCode(order)">
-                <el-icon><Ticket /></el-icon>
-                显示取餐码
-              </el-button>
-              <div class="pickup-tips">
-                <p>请在15分钟内完成取餐</p>
-                <p>为保证餐品品质，请尽快取餐</p>
-              </div>
-            </div>
-          </el-card>
-        </div>
-      </el-tab-pane>
-      <el-tab-pane label="已完成" name="completed">
-        <el-empty v-if="completedOrders.length === 0" description="暂无已完成订单" />
-        <el-card v-for="order in completedOrders" :key="order.id" class="order-card">
-          <!-- 已完成订单的展示内容类似 -->
-        </el-card>
-      </el-tab-pane>
-    </el-tabs>
-
-    <el-dialog
-      v-model="qrDialogVisible"
-      title="取餐码"
-      width="360px"
-      center
-      class="qr-dialog"
-      :show-close="true"
-      :close-on-click-modal="false">
-      <div class="qr-dialog-content">
-        <div class="qr-code-container">
-          <qrcode-vue
-            v-if="currentOrder"
-            :value="generateQRValue(currentOrder)"
-            :size="200"
-            level="H"
-            class="pickup-qr"
-            render-as="svg"
-          />
-        </div>
-        <div class="qr-info">
-          <div class="window-name">{{ currentOrder?.windowName }}</div>
-          <div class="pickup-location">{{ currentOrder?.pickupLocation }}</div>
-        </div>
-        <div class="qr-tip">
-          <el-icon><Ticket /></el-icon>
-          <span>请到取餐处出示此码</span>
-        </div>
+      <div class="test-button" v-if="isDevelopment">
+        <el-button 
+          type="warning" 
+          circle 
+          @click="testFeatures"
+          class="float-button test-float-button">
+          <el-icon><Tools /></el-icon>
+        </el-button>
       </div>
-    </el-dialog>
-
-    <div class="test-button" v-if="isDevelopment">
-      <el-button 
-        type="warning" 
-        circle 
-        @click="testFeatures"
-        class="float-button test-float-button">
-        <el-icon><Tools /></el-icon>
-      </el-button>
     </div>
   </div>
 </template>
@@ -266,12 +281,12 @@ export default {
     const router = useRouter()
     const activeTab = ref('ongoing')
     const ongoingOrders = ref([])
-    const completedOrders = ref([])
 
     // 测试数据
     const mockOrders = [
       {
         id: 1,
+        canteenName: '第一食堂',
         windowName: '特色炒菜',
         status: 'preparing',
         dishes: [
@@ -285,6 +300,7 @@ export default {
       },
       {
         id: 2,
+        canteenName: '第二食堂',
         windowName: '面食档口',
         status: 'preparing',
         dishes: [
@@ -298,6 +314,7 @@ export default {
       },
       {
         id: 3,
+        canteenName: '第一食堂',
         windowName: '盖浇饭窗口',
         status: 'ready',
         dishes: [
@@ -307,31 +324,6 @@ export default {
         createTime: '2024-01-20 12:25:00',
         pickupLocation: '一楼2号窗口',
         pickupCode: 'B789'
-      },
-      {
-        id: 4,
-        windowName: '特色炒菜',
-        status: 'completed',
-        dishes: [
-          { id: 6, name: '鱼香肉丝', quantity: 1, price: 16 },
-          { id: 7, name: '蒜蓉空心菜', quantity: 1, price: 8 }
-        ],
-        totalPrice: 24,
-        createTime: '2024-01-20 11:30:00',
-        pickupLocation: '一楼3号窗口',
-        completedTime: '2024-01-20 11:50:00'
-      },
-      {
-        id: 5,
-        windowName: '面食档口',
-        status: 'cancelled',
-        dishes: [
-          { id: 8, name: '阳春面', quantity: 1, price: 12 }
-        ],
-        totalPrice: 12,
-        createTime: '2024-01-20 11:20:00',
-        cancelTime: '2024-01-20 11:22:00',
-        cancelReason: '已过午餐时间'
       }
     ]
 
@@ -380,12 +372,9 @@ export default {
     }
 
     onMounted(() => {
-      // 模拟加载数据
+      // 修改加载数据逻辑，只加载进行中的订单
       ongoingOrders.value = mockOrders.filter(order => 
-        ['ordered', 'preparing', 'ready'].includes(order.status)
-      )
-      completedOrders.value = mockOrders.filter(order => 
-        ['completed', 'cancelled'].includes(order.status)
+        ['preparing', 'ready'].includes(order.status)
       )
 
       // 模拟定时检查订单状态（实际项目中应该使用WebSocket）
@@ -518,7 +507,6 @@ export default {
         const index = ongoingOrders.value.findIndex(o => o.id === order.id)
         if (index !== -1) {
           ongoingOrders.value[index].status = 'cancelled'
-          completedOrders.value.push(ongoingOrders.value[index])
           ongoingOrders.value.splice(index, 1)
         }
       } catch (error) {
@@ -659,10 +647,25 @@ export default {
       })
     }
 
+    // 通过点击"查看详情"按钮跳转
+    const viewOrderDetail = (order) => {
+      router.push({
+        path: `/student/current-orders/${order.id}`,
+        query: {
+          status: order.status,
+          createTime: order.createTime,
+          canteenName: order.canteenName,
+          windowName: order.windowName,
+          pickupLocation: order.pickupLocation,
+          totalAmount: order.totalAmount,
+          dishes: JSON.stringify(order.dishes)
+        }
+      })
+    }
+
     return {
       activeTab,
       ongoingOrders,
-      completedOrders,
       getStatusType,
       getStatusText,
       goToHistory,
@@ -683,13 +686,32 @@ export default {
       testFeatures,
       isDevelopment,
       testNotification,
-      testVibration
+      testVibration,
+      viewOrderDetail
     }
   }
 }
 </script>
 
 <style scoped>
+.order-list-container {
+  width: 100%;
+  min-height: 100%;
+  background-color: #f5f7fa;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .order-list {
   padding: 6px 4px;
   background: #f5f7fa;
@@ -733,7 +755,25 @@ export default {
 
 .header-actions {
   margin-top: 6px;
-  gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  width: 180px;
+  margin-right: auto; /* 让搜索框占据左侧空间 */
+}
+
+.search-input :deep(.el-input__inner) {
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+}
+
+.search-input :deep(.el-input__prefix) {
+  line-height: 28px;
 }
 
 .refresh-btn,
@@ -775,10 +815,12 @@ export default {
   overflow: hidden;
   position: relative;
   font-size: 12px;
+  transition: all 0.3s ease;
 }
 
 .order-card:hover {
-  transform: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .ready-status {
@@ -817,6 +859,18 @@ export default {
   font-size: 10px;
   font-weight: normal;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badgePop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .status-badge.ordered { background-color: var(--el-color-info); }
@@ -827,11 +881,22 @@ export default {
 .window-info {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.location-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.canteen-name {
+  font-size: 11px;
+  color: #909399;
 }
 
 .window-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #333;
 }
@@ -997,51 +1062,6 @@ export default {
   margin-top: 4px;
 }
 
-.header-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.refresh-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  padding: 6px 10px;
-  height: 32px;
-}
-
-.refresh-btn .el-icon {
-  font-size: 14px;
-}
-
-.filter-bar {
-  margin: 6px 0;
-  padding: 0 2px;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.filter-bar :deep(.el-radio-button__inner) {
-  padding: 4px 8px;
-  font-size: 11px;
-  height: 24px;
-}
-
-.search-input {
-  width: auto;
-  flex: 1;
-  height: 28px;
-}
-
-.search-input :deep(.el-input__inner) {
-  font-size: 12px;
-  height: 28px;
-}
-
 .waiting-time {
   margin: 6px;
   padding: 4px 8px;
@@ -1099,132 +1119,174 @@ export default {
 }
 
 .qr-dialog :deep(.el-dialog) {
-  width: 90% !important;
-  max-width: 300px;
-  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  margin: 10vh auto !important;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: dialogZoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: #fff;
+}
+
+@keyframes dialogZoom {
+  from {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }
 
 .qr-dialog :deep(.el-dialog__header) {
-  padding: 12px;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.qr-dialog :deep(.el-dialog__title) {
-  font-size: 15px;
-  font-weight: 500;
+  margin: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #f8f9fa;
+  text-align: center;
 }
 
 .qr-dialog :deep(.el-dialog__body) {
-  padding: 16px;
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
 }
 
-.qr-code-container {
-  padding: 16px;
-  width: 100%;
+.qr-dialog-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
 }
 
-.pickup-qr {
-  width: 180px;
-  height: 180px;
-  padding: 8px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.qr-info {
-  text-align: center;
+.qr-header {
   width: 100%;
+  margin-bottom: 20px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
-.qr-info .window-name {
-  font-size: 14px;
+.window-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.window-info::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e4e7ed, transparent);
+}
+
+.canteen-name {
+  font-size: 16px;
   font-weight: 500;
   color: #303133;
-  margin-bottom: 4px;
+  background: linear-gradient(120deg, #409EFF, #67c23a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.qr-info .pickup-location {
-  font-size: 12px;
-  color: #606266;
-  margin-bottom: 8px;
+.qr-code-wrapper {
+  position: relative;
+  padding: 10px;
+  margin: auto 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  animation: qrCodeFadeIn 0.5s ease-out 0.2s backwards;
+}
+
+@keyframes qrCodeFadeIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.qr-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dashed #e4e7ed;
+  border-radius: 4px;
+  animation: borderBlink 3s infinite;
+}
+
+@keyframes borderBlink {
+  0% { border-color: #e4e7ed; }
+  50% { border-color: #67c23a; }
+  100% { border-color: #e4e7ed; }
+}
+
+.qr-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .qr-tip {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 8px;
   color: #67c23a;
-  font-size: 13px;
-  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #f0f9eb;
+  padding: 8px 16px;
+  border-radius: 20px;
+  width: fit-content;
 }
 
-.qr-tip .el-icon {
-  font-size: 16px;
-}
-
-.show-qr-btn {
-  width: calc(100% - 16px);
-  margin: 8px;
-  height: 32px;
-  font-size: 12px;
+.validity-info {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
+  gap: 8px;
+  color: #909399;
+  font-size: 13px;
+  background: #f4f4f5;
+  padding: 6px 12px;
+  border-radius: 16px;
+  width: fit-content;
 }
 
-@media screen and (max-width: 393px) {
-  .qr-dialog :deep(.el-dialog) {
-    width: 85% !important;
-    max-width: 280px;
-  }
-
-  .qr-dialog :deep(.el-dialog__header) {
-    padding: 10px;
-  }
-
-  .qr-dialog :deep(.el-dialog__body) {
-    padding: 12px;
-  }
-
-  .qr-code-container {
-    padding: 12px;
-    gap: 8px;
-  }
-
-  .pickup-qr {
-    width: 160px;
-    height: 160px;
-    padding: 6px;
-  }
-
-  .qr-info .window-name {
-    font-size: 13px;
-  }
-
-  .qr-info .pickup-location {
-    font-size: 11px;
-  }
-
-  .qr-tip {
-    font-size: 12px;
-  }
-
-  .qr-tip .el-icon {
-    font-size: 14px;
-  }
-
-  .show-qr-btn {
-    height: 28px;
-    font-size: 11px;
-    margin: 6px;
-  }
+.qr-tip .el-icon,
+.validity-info .el-icon {
+  font-size: 16px;
 }
 
 .order-alert {
@@ -1269,6 +1331,56 @@ export default {
   margin: 0 auto;
 }
 
+.show-qr-btn {
+  height: 28px;
+  font-size: 11px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.show-qr-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease-out, height 0.6s ease-out;
+}
+
+.show-qr-btn:hover::after {
+  width: 200%;
+  height: 200%;
+}
+
+.refresh-btn {
+  transition: transform 0.3s ease;
+}
+
+.refresh-btn:active {
+  transform: rotate(180deg);
+}
+
+.order-progress :deep(.el-step__head.is-process),
+.order-progress :deep(.el-step__head.is-success) {
+  animation: stepPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes stepPop {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 @media screen and (max-width: 393px) {
   .dish-name {
     font-size: 11px;
@@ -1289,6 +1401,17 @@ export default {
   
   .show-qr-btn .el-icon {
     font-size: 12px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .qr-dialog :deep(.el-dialog) {
+    width: 90% !important;
+    height: 90vh;
+  }
+
+  .qr-dialog-content {
+    padding: 16px;
   }
 }
 </style> 

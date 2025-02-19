@@ -12,8 +12,8 @@
         <h4>就餐偏好</h4>
         <el-form-item label="默认就餐方式">
           <el-radio-group v-model="preferences.defaultMealType">
-            <el-radio label="dine_in">堂食</el-radio>
-            <el-radio label="take_out">打包</el-radio>
+            <el-radio :value="'dine_in'">堂食</el-radio>
+            <el-radio :value="'take_out'">打包</el-radio>
           </el-radio-group>
         </el-form-item>
         
@@ -39,9 +39,9 @@
         
         <el-form-item label="每页显示数量">
           <el-select v-model="preferences.pageSize">
-            <el-option label="12条" value="12" />
-            <el-option label="24条" value="24" />
-            <el-option label="36条" value="36" />
+            <el-option label="10条" value="10" />
+            <el-option label="20条" value="20" />
+            <el-option label="30条" value="30" />
           </el-select>
         </el-form-item>
         
@@ -68,7 +68,7 @@ export default {
       defaultMealType: 'dine_in',
       taste: [],
       defaultSort: 'sales',
-      pageSize: '24'
+      pageSize: '20'
     })
     
     const saving = ref(false)

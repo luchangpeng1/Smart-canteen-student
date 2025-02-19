@@ -1,598 +1,604 @@
 <template>
-  <div class="dish-list">
-    <!-- 添加悬浮购物车按钮 -->
-    <div class="floating-cart-button" @click="goToCart">
-      <el-badge :value="totalCount" :max="99" class="cart-badge">
-        <el-button type="primary" circle class="cart-button">
-          <el-icon><ShoppingCart /></el-icon>
-        </el-button>
-      </el-badge>
-    </div>
+  <div class="dish-list-container">
+    <div class="dish-list">
+      <!-- 添加悬浮购物车按钮 -->
+      <div class="floating-cart-button" @click="goToCart">
+        <el-badge :value="totalCount" :max="99" class="cart-badge">
+          <el-button type="primary" circle class="cart-button">
+            <el-icon><ShoppingCart /></el-icon>
+          </el-button>
+        </el-badge>
+      </div>
 
-    <!-- 添加地图显示/隐藏按钮 -->
-    <div class="map-toggle">
-      <el-button 
-        type="primary" 
-        plain
-        size="small"
-        @click="toggleMap"
-        class="toggle-button">
-        <el-icon><Location /></el-icon>
-        {{ isMapVisible ? '收起地图' : '显示地图' }}
-      </el-button>
-    </div>
-    
-    <!-- 修改3D地图组件，添加v-show控制显示/隐藏 -->
-    <CampusMap3D 
-      v-show="isMapVisible"
-      :canteens="mapCanteens"
-      @select-canteen="handleMapCanteenSelect"
-      class="map-section"
-    />
-    
-    <!-- 原有的顶部餐厅导航 -->
-    <div class="canteen-nav">
-      <el-tabs v-model="activeCanteen" type="card" @tab-click="handleCanteenChange">
-        <el-tab-pane 
-          v-for="canteen in canteens" 
-          :key="canteen.id" 
-          :label="canteen.name" 
-          :name="canteen.name">
-          <!-- 餐厅信息卡片 -->
-          <el-card class="canteen-info">
-            <div class="canteen-header">
-              <div class="canteen-basic">
-                <h3>{{ canteen.name }}</h3>
-                <div class="status-tags">
-                  <el-tag 
-                    :type="isCanteenOpen(canteen) ? 'success' : 'info'"
-                    size="small">
-                    {{ isCanteenOpen(canteen) ? '营业中' : '已打烊' }}
-                  </el-tag>
-                  <el-tag 
-                    :type="getCrowdLevelType(canteen.name)"
-                    size="small"
-                    effect="dark">
-                    {{ getCrowdLevelText(canteen.name) }}
-                  </el-tag>
+      <!-- 添加地图显示/隐藏按钮 -->
+      <div class="map-toggle">
+        <el-button 
+          type="primary" 
+          plain
+          size="small"
+          @click="toggleMap"
+          class="toggle-button">
+          <el-icon><Location /></el-icon>
+          {{ isMapVisible ? '收起地图' : '显示地图' }}
+        </el-button>
+      </div>
+      
+      <!-- 修改3D地图组件，添加v-show控制显示/隐藏 -->
+      <CampusMap3D 
+        v-show="isMapVisible"
+        :canteens="mapCanteens"
+        @select-canteen="handleMapCanteenSelect"
+        class="map-section"
+        />
+      
+      <!-- 添加客流量监控组件 -->
+      <CanteenTrafficMonitor />
+
+      <!-- 原有的顶部餐厅导航 -->
+      <div class="canteen-nav">
+        <el-tabs v-model="activeCanteen" type="card" @tab-click="handleCanteenChange">
+          <el-tab-pane 
+            v-for="canteen in canteens" 
+            :key="canteen.id" 
+            :label="canteen.name" 
+            :name="canteen.name">
+            <!-- 餐厅信息卡片 -->
+            <el-card class="canteen-info">
+              <div class="canteen-header">
+                <div class="canteen-basic">
+                  <h3>{{ canteen.name }}</h3>
+                  <div class="status-tags">
+                    <el-tag 
+                      :type="isCanteenOpen(canteen) ? 'success' : 'info'"
+                      size="small">
+                      {{ isCanteenOpen(canteen) ? '营业中' : '已打烊' }}
+                    </el-tag>
+                    <el-tag 
+                      :type="getCrowdLevelType(canteen.name)"
+                      size="small"
+                      effect="dark">
+                      {{ getCrowdLevelText(canteen.name) }}
+                    </el-tag>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="canteen-details">
-              <p><el-icon><Timer /></el-icon> 营业时间：10:30-13:30, 16:30-19:00</p>
-              <p><el-icon><Position /></el-icon> 位置：{{ canteen.location }}</p>
-            </div>
-          </el-card>
+              <div class="canteen-details">
+                <p><el-icon><Timer /></el-icon> 营业时间：10:30-13:30, 16:30-19:00</p>
+                <p><el-icon><Position /></el-icon> 位置：{{ canteen.location }}</p>
+              </div>
+            </el-card>
 
-          <!-- 添加餐厅级别的搜索过滤控制栏 -->
-          <el-card class="filter-card">
-            <div class="filter-controls">
-              <!-- 搜索框单独占一行 -->
-              <div class="search-wrapper">
-                <el-input
-                  v-model="searchQuery"
-                  placeholder="搜索菜品"
-                  class="filter-item search-filter"
-                  clearable
-                  @keyup.enter="handleSearch">
-                  <template #prefix>
-                    <el-icon><Search /></el-icon>
-                  </template>
-                </el-input>
+            <!-- 添加餐厅级别的搜索过滤控制栏 -->
+            <el-card class="filter-card">
+              <div class="filter-controls">
+                <!-- 搜索框和按钮的容器 -->
+                <div class="search-container">
+                  <el-input
+                    v-model="searchQuery"
+                    placeholder="搜索菜品"
+                    class="search-input"
+                    clearable
+                    @keyup.enter="handleSearch">
+                    <template #prefix>
+                      <el-icon><Search /></el-icon>
+                    </template>
+                    <template #append>
+                      <el-button 
+                        type="primary" 
+                        @click="handleSearch">
+                        <el-icon><Search /></el-icon>
+                        搜索
+                      </el-button>
+                    </template>
+                  </el-input>
+                </div>
+
+                <!-- 口味和价格筛选放在同一行 -->
+                <div class="filter-group">
+                  <el-select
+                    v-model="selectedTaste"
+                    placeholder="选择口味"
+                    clearable
+                    class="filter-item"
+                    @change="handleFilter">
+                    <el-option
+                      label="全部口味"
+                      value="">
+                    </el-option>
+                    <el-option
+                      v-for="taste in tasteOptions"
+                      :key="taste.value"
+                      :label="taste.label"
+                      :value="taste.value"
+                    />
+                  </el-select>
+
+                  <el-select
+                    v-model="sortOption"
+                    placeholder="排序方式"
+                    class="filter-item"
+                    @change="handleSort">
+                    <el-option 
+                      label="全部"
+                      value="">
+                    </el-option>
+                    <el-option label="默认排序" value="default" />
+                    <el-option label="价格从低到高" value="price-asc" />
+                    <el-option label="价格从高到低" value="price-desc" />
+                    <el-option label="销量从高到低" value="sales-desc" />
+                    <el-option label="销量从低到高" value="sales-asc" />
+                  </el-select>
+                </div>
+
                 <el-button 
                   type="primary" 
-                  class="search-button"
-                  @click="handleSearch">
-                  <el-icon><Search /></el-icon>
-                  搜索
+                  @click="resetFilters"
+                  class="filter-item">
+                  重置筛选
                 </el-button>
               </div>
+            </el-card>
 
-              <!-- 口味和价格筛选放在同一行 -->
-              <div class="filter-group">
-                <el-select
-                  v-model="selectedTaste"
-                  placeholder="选择口味"
-                  clearable
-                  class="filter-item"
-                  @change="handleFilter">
-                  <el-option
-                    label="全部口味"
-                    value="">
-                  </el-option>
-                  <el-option
-                    v-for="taste in tasteOptions"
-                    :key="taste.value"
-                    :label="taste.label"
-                    :value="taste.value"
-                  />
-                </el-select>
-
-                <el-select
-                  v-model="sortOption"
-                  placeholder="排序方式"
-                  class="filter-item"
-                  @change="handleSort">
-                  <el-option 
-                    label="全部"
-                    value="">
-                  </el-option>
-                  <el-option label="默认排序" value="default" />
-                  <el-option label="价格从低到高" value="price-asc" />
-                  <el-option label="价格从高到低" value="price-desc" />
-                  <el-option label="销量从高到低" value="sales-desc" />
-                  <el-option label="销量从低到高" value="sales-asc" />
-                </el-select>
-              </div>
-
-              <el-button 
-                type="primary" 
-                @click="resetFilters"
-                class="filter-item">
-                重置筛选
-              </el-button>
-            </div>
-          </el-card>
-
-          <!-- 窗口分类展示 -->
-          <div class="window-navigation">
-            <!-- 添加购物车抽屉 -->
-            <el-drawer
-              v-model="cartDrawerVisible"
-              title="购物车"
-              direction="rtl"
-              size="380px"
-              :show-close="true"
-              class="cart-drawer">
-              <template #header>
-                <div class="cart-drawer-header">
-                  <h3>购物车</h3>
-                  <el-button 
-                    type="danger" 
-                    plain 
-                    size="small" 
-                    @click="clearCart" 
-                    v-if="cartItems.length > 0">
-                    清空购物车
-                  </el-button>
-                </div>
-              </template>
-              
-              <div class="cart-drawer-content">
-                <template v-if="hasCartItems">
-                  <!-- 按窗口分组显示购物车商品 -->
-                  <div v-for="(items, windowId) in groupedCartItems" 
-                       :key="windowId" 
-                       class="cart-window-group">
-                    <div class="cart-window-header">
-                      <el-tag size="small">{{ getWindowName(windowId) }}</el-tag>
-                      <el-button 
-                        type="danger" 
-                        plain 
-                        size="small" 
-                        @click="clearWindowCart(windowId)">
-                        清空
-                      </el-button>
-                    </div>
-                    
-                    <div class="cart-items-list">
-                      <div v-for="item in items" 
-                           :key="item.id" 
-                           class="cart-item">
-                        <el-image 
-                          :src="item.image_url" 
-                          class="cart-item-image"
-                          fit="cover">
-                          <template #error>
-                            <div class="image-placeholder">
-                              <el-icon><Picture /></el-icon>
-                            </div>
-                          </template>
-                        </el-image>
-                        
-                        <div class="cart-item-info">
-                          <div class="cart-item-name">{{ item.name }}</div>
-                          <div class="cart-item-price">¥{{ (item.price * item.quantity).toFixed(2) }}</div>
-                        </div>
-                        
-                        <div class="cart-item-actions">
-                          <el-input-number 
-                            v-model="item.quantity" 
-                            :min="0" 
-                            :max="item.stock"
-                            size="small"
-                            @change="handleQuantityChange(item, windowId)"
-                            controls-position="right">
-                          </el-input-number>
-                        </div>
-                      </div>
-                      <!-- 每个窗口的小计和结�����������������������按钮 -->
-                      <div class="window-cart-footer">
-                        <div class="window-total-info">
-                          <span class="total-label">小计:</span>
-                          <span class="total-price">¥{{ getWindowTotal(items).toFixed(2) }}</span>
-                        </div>
-                        <el-button 
-                          type="primary" 
-                          size="small"
-                          @click="goToCheckout(windowId)">
-                          结算 ({{ getWindowCount(items) }}件)
-                        </el-button>
-                      </div>
-                    </div>
+            <!-- 窗口分类展示 -->
+            <div class="window-navigation">
+              <!-- 添加购物车抽屉 -->
+              <el-drawer
+                v-model="cartDrawerVisible"
+                title="购物车"
+                direction="rtl"
+                size="380px"
+                :show-close="true"
+                class="cart-drawer">
+                <template #header>
+                  <div class="cart-drawer-header">
+                    <h3>购物车</h3>
+                    <el-button 
+                      type="danger" 
+                      plain 
+                      size="small" 
+                      @click="clearCart" 
+                      v-if="cartItems.length > 0">
+                      清空购物车
+                    </el-button>
                   </div>
                 </template>
                 
-                <div v-else class="empty-cart">
-                  <el-empty description="购物车是空的">
-                    <template #image>
-                      <el-icon :size="60" class="empty-cart-icon"><ShoppingCart /></el-icon>
-                    </template>
-                  </el-empty>
-                </div>
-              </div>
-            </el-drawer>
-
-            <!-- 楼层导航 -->
-            <div class="nav-section floor-nav">
-              <div class="nav-list">
-                <div
-                  v-for="floor in canteen.floors"
-                  :key="floor"
-                  class="nav-item"
-                  :class="{ active: selectedFloor === floor }"
-                  @click="toggleFloor(floor)">
-                  {{ floor }}层
-                </div>
-              </div>
-            </div>
-
-            <!-- 全部菜品展示区域 -->
-            <div v-if="!selectedFloor" class="all-dishes-container">
-              <div class="dishes-grid">
-                <div v-for="dish in finalFilteredAllDishes" 
-                     :key="dish.id" 
-                     class="dish-card"
-                     @click="goToDishDetail(dish.id)">
-                  <!-- 使用现有的菜品卡片样式 -->
-                  <div class="dish-card-content">
-                    <el-image :src="dish.image_url" class="dish-image" fit="cover">
-                      <template #error>
-                        <div class="image-placeholder">
-                          <el-icon><Picture /></el-icon>
-                        </div>
-                      </template>
-                    </el-image>
-                    
-                    <div class="dish-info">
-                      <div class="dish-header">
-                        <div class="dish-title">
-                          <h4 class="dish-name">{{ dish.name }}</h4>
-                          <div class="dish-window-info">
-                            <el-tag size="small" effect="plain" type="info">
-                              {{ dish.windowName }} · {{ getFloorByWindowId(dish.windowId) }}层
-                            </el-tag>
-                          </div>
-                        </div>
-                        <el-tag 
-                          size="small" 
-                          :type="getCategoryType(dish.category)">
-                          {{ dish.category }}
-                        </el-tag>
-                      </div>
-                      
-                      <p class="dish-description">{{ dish.description }}</p>
-                      
-                      <div class="dish-tags">
-                        <el-tag size="small" effect="plain" :type="getTasteTagType(dish.taste)">
-                          {{ getTasteLabel(dish.taste) }}
-                        </el-tag>
-                        <el-tag size="small" effect="plain" :type="dish.stock > 0 ? 'success' : 'danger'">
-                          {{ dish.stock > 0 ? `库存: ${dish.stock}` : '已售罄' }}
-                        </el-tag>
-                        <el-tag size="small" effect="plain" type="warning">
-                          周销量: {{ dish.weekSales }}
-                        </el-tag>
-                      </div>
-
-                      <div class="dish-footer">
-                        <div class="price-info">
-                          <span class="price-symbol">¥</span>
-                          <span class="price-value">{{ dish.price.toFixed(2) }}</span>
-                        </div>
+                <div class="cart-drawer-content">
+                  <template v-if="hasCartItems">
+                    <!-- 按窗口分组显示购物车商品 -->
+                    <div v-for="(items, windowId) in groupedCartItems" 
+                         :key="windowId" 
+                         class="cart-window-group">
+                      <div class="cart-window-header">
+                        <el-tag size="small">{{ getWindowName(windowId) }}</el-tag>
                         <el-button 
-                          type="primary" 
+                          type="danger" 
+                          plain 
                           size="small" 
-                          class="add-button"
-                          :disabled="dish.stock === 0"
-                          @click.stop="addToCart(dish)">
-                          <el-icon><Plus /></el-icon>
+                          @click="clearWindowCart(windowId)">
+                          清空
                         </el-button>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 原有的按楼层展示窗口和菜品的部��� -->
-            <div v-else class="meituan-layout">
-              <!-- 左侧窗口列表 -->
-              <div class="window-list">
-                <div
-                  v-for="window in getFloorWindows(activeCanteen, selectedFloor)"
-                  :key="window.id"
-                  class="window-item"
-                  :class="{ active: selectedWindow?.id === window.id }"
-                  @click="selectWindow(window)"
-                >
-                  <div class="window-image">
-                    <el-image
-                      :src="window.image_url || ''"
-                      fit="cover"
-                    >
-                      <template #error>
-                        <div class="window-image-placeholder">
-                          <el-icon><Picture /></el-icon>
-                        </div>
-                      </template>
-                    </el-image>
-                  </div>
-                  <div class="window-info">
-                    <div class="window-name">{{ window.name }}</div>
-                    <div class="window-status" :class="{ closed: !isWindowOpen(window) }">
-                      <el-icon v-if="isWindowOpen(window)"><CircleCheck /></el-icon>
-                      <el-icon v-else><CircleClose /></el-icon>
-                      <span>{{ isWindowOpen(window) ? '营业中' : '已打烊' }}</span>
-                    </div>
-                    <div class="window-hours">
-                      <el-icon><Timer /></el-icon>
-                      <span>{{ window.operatingHours }}</span>
-                    </div>
-                    <div class="window-description" v-if="window.description">
-                      {{ window.description }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 右侧内容区域 -->
-              <div class="dishes-container">
-                <!-- 菜品列表 -->
-                <div class="dishes-list">
-                  <template v-if="selectedWindow">
-                    <div v-if="isWindowOpen(selectedWindow)">
-                      <!-- 添加窗口信息卡片 -->
-                      <el-card class="window-info-card">
-                        <div class="window-header">
-                          <h3>{{ selectedWindow.name }}</h3>
-                          <div class="window-tags">
-                            <el-tag size="small" type="success">营业中</el-tag>
-                            <el-tag size="small" type="info">{{ selectedWindow.operatingHours }}</el-tag>
+                      
+                      <div class="cart-items-list">
+                        <div v-for="item in items" 
+                             :key="item.id" 
+                             class="cart-item">
+                          <el-image 
+                            :src="item.image_url" 
+                            class="cart-item-image"
+                            fit="cover">
+                            <template #error>
+                              <div class="image-placeholder">
+                                <el-icon><Picture /></el-icon>
+                              </div>
+                            </template>
+                          </el-image>
+                          
+                          <div class="cart-item-info">
+                            <div class="cart-item-name">{{ item.name }}</div>
+                            <div class="cart-item-price">¥{{ (item.price * item.quantity).toFixed(2) }}</div>
+                          </div>
+                          
+                          <div class="cart-item-actions">
+                            <el-input-number 
+                              v-model="item.quantity" 
+                              :min="0" 
+                              :max="item.stock"
+                              size="small"
+                              @change="handleQuantityChange(item, windowId)"
+                              controls-position="right">
+                            </el-input-number>
                           </div>
                         </div>
-                      </el-card>
-
-                      <!-- 优化搜索过滤栏 -->
-                      <div class="window-filter-controls">
-                        <el-input
-                          v-model="windowSearchQuery"
-                          placeholder="搜索当前窗口菜品"
-                          class="filter-item"
-                          clearable
-                          @input="handleWindowSearch">
-                          <template #prefix>
-                            <el-icon><Search /></el-icon>
-                          </template>
-                        </el-input>
-                        
-                        <!-- 添加口味筛选 -->
-                        <el-select
-                          v-model="selectedTaste"
-                          placeholder="选择口味"
-                          clearable
-                          class="filter-item"
-                          @change="handleFilter">
-                          <el-option
-                            v-for="taste in tasteOptions"
-                            :key="taste.value"
-                            :label="taste.label"
-                            :value="taste.value"
-                          />
-                        </el-select>
-                        
-                        <!-- 排序选项 -->
-                        <el-select
-                          v-model="sortOption"
-                          placeholder="排序方式"
-                          class="filter-item"
-                          @change="handleSort">
-                          <el-option 
-                            label="全部"
-                            value="">
-                          </el-option>
-                          <el-option label="默认排序" value="default" />
-                          <el-option label="价格从低到高" value="price-asc" />
-                          <el-option label="价格从高到低" value="price-desc" />
-                          <el-option label="销量从高到低" value="sales-desc" />
-                          <el-option label="销量从低到高" value="sales-asc" />
-                        </el-select>
-                      </div>
-
-                      <!-- 添加分类标签导航 -->
-                      <div class="category-nav">
-                        <el-tag
-                          v-for="category in dishCategories"
-                          :key="category"
-                          :type="selectedCategory === category ? 'primary' : 'info'"
-                          effect="plain"
-                          class="category-tag"
-                          @click="selectCategory(category)">
-                          {{ category }}
-                        </el-tag>
-                      </div>
-
-                      <!-- 优化菜品卡片布局 -->
-                      <div class="dishes-grid">
-                        <div v-for="dish in finalFilteredDishes" 
-                             :key="dish.id" 
-                             class="dish-card"
-                             @click="goToDishDetail(dish.id)">
-                          <div class="dish-card-content">
-                            <el-image :src="dish.image_url" class="dish-image" fit="cover">
-                              <template #error>
-                                <div class="image-placeholder">
-                                  <el-icon><Picture /></el-icon>
-                                </div>
-                              </template>
-                            </el-image>
-                            
-                            <div class="dish-info">
-                              <div class="dish-header">
-                                <div class="dish-title">
-                                  <h4 class="dish-name">{{ dish.name }}</h4>
-                                  <div class="dish-window-info">
-                                    <el-tag size="small" effect="plain" type="info">
-                                      {{ dish.windowName }} · {{ getFloorByWindowId(dish.windowId) }}层
-                                    </el-tag>
-                                  </div>
-                                </div>
-                                <el-tag 
-                                  size="small" 
-                                  :type="getCategoryType(dish.category) || 'info'">
-                                  {{ dish.category }}
-                                </el-tag>
-                              </div>
-                              
-                              <p class="dish-description">{{ dish.description }}</p>
-                              
-                              <div class="dish-tags">
-                                <el-tag size="small" effect="plain" :type="getTasteTagType(dish.taste)">
-                                  {{ getTasteLabel(dish.taste) }}
-                                </el-tag>
-                                <el-tag size="small" effect="plain" :type="dish.stock > 0 ? 'success' : 'danger'">
-                                  {{ dish.stock > 0 ? `库存: ${dish.stock}` : '已售罄' }}
-                                </el-tag>
-                                <el-tag size="small" effect="plain" type="warning">
-                                  周销量: {{ dish.weekSales }}
-                                </el-tag>
-                              </div>
-
-                              <div class="dish-footer">
-                                <div class="price-info">
-                                  <span class="price-symbol">¥</span>
-                                  <span class="price-value">{{ dish.price.toFixed(2) }}</span>
-                                </div>
-                                <el-button 
-                                  type="primary" 
-                                  size="small" 
-                                  class="add-button"
-                                  :disabled="dish.stock === 0"
-                                  @click.stop="addToCart(dish)">
-                                  <el-icon><Plus /></el-icon>
-                                </el-button>
-                              </div>
-                            </div>
+                        <!-- 每个窗口的小计和结按钮 -->
+                        <div class="window-cart-footer">
+                          <div class="window-total-info">
+                            <span class="total-label">小计:</span>
+                            <span class="total-price">¥{{ getWindowTotal(items).toFixed(2) }}</span>
                           </div>
+                          <el-button 
+                            type="primary" 
+                            size="small"
+                            @click="goToCheckout(windowId)">
+                            结算 ({{ getWindowCount(items) }}件)
+                          </el-button>
                         </div>
                       </div>
-                    </div>
-                    <div v-else class="window-closed">
-                      <el-empty
-                        description="该窗口暂无菜品"
-                        :image-size="200">
-                        <template #description>
-                          <div class="empty-state-content">
-                            <h3 class="empty-title">{{ selectedWindow.name }}</h3>
-                            <p class="empty-status">{{ isWindowOpen(selectedWindow) ? '营业中' : '已打烊' }}</p>
-                            <p class="empty-hours">营业时间：{{ selectedWindow.operatingHours }}</p>
-                            <p class="empty-hint">建议您选择其他窗口</p>
-                          </div>
-                        </template>
-                        <el-button type="primary" @click="selectedWindow = null">返回选择</el-button>
-                      </el-empty>
                     </div>
                   </template>
-                  <div v-else class="no-window-selected">
-                    <el-empty
-                      description="请选择窗口"
-                      :image-size="200">
-                      <template #description>
-                        <div class="empty-state-content">
-                          <p class="empty-hint">从左侧选��您感兴趣的窗口</p>
-                          <p class="empty-sub-hint">当前���层共有 {{ displayWindows.length }} 个窗口可选</p>
-                        </div>
+                  
+                  <div v-else class="empty-cart">
+                    <el-empty description="购物车是空的">
+                      <template #image>
+                        <el-icon :size="60" class="empty-cart-icon"><ShoppingCart /></el-icon>
                       </template>
                     </el-empty>
                   </div>
                 </div>
+              </el-drawer>
+
+              <!-- 楼层导航 -->
+              <div class="nav-section floor-nav">
+                <div class="nav-list">
+                  <div
+                    v-for="floor in canteen.floors"
+                    :key="floor"
+                    class="nav-item"
+                    :class="{ active: selectedFloor === floor }"
+                    @click="toggleFloor(floor)">
+                    {{ floor }}层
+                  </div>
+                </div>
+              </div>
+
+              <!-- 全部菜品展示区域 -->
+              <div v-if="!selectedFloor" class="all-dishes-container">
+                <div class="dishes-grid">
+                  <div v-for="dish in finalFilteredAllDishes" 
+                       :key="dish.id" 
+                       class="dish-card"
+                       @click="goToDishDetail(dish.id)">
+                    <!-- 使用现有的菜品卡片样式 -->
+                    <div class="dish-card-content">
+                      <el-image :src="dish.image_url" class="dish-image" fit="cover">
+                        <template #error>
+                          <div class="image-placeholder">
+                            <el-icon><Picture /></el-icon>
+                          </div>
+                        </template>
+                      </el-image>
+                      
+                      <div class="dish-info">
+                        <div class="dish-header">
+                          <div class="dish-title">
+                            <h4 class="dish-name">{{ dish.name }}</h4>
+                            <div class="dish-window-info">
+                              <el-tag size="small" effect="plain" type="info">
+                                {{ dish.windowName }} · {{ getFloorByWindowId(dish.windowId) }}层
+                              </el-tag>
+                            </div>
+                          </div>
+                          <el-tag 
+                            size="small" 
+                            :type="getCategoryType(dish.category)">
+                            {{ dish.category }}
+                          </el-tag>
+                        </div>
+                        
+                        <p class="dish-description">{{ dish.description }}</p>
+                        
+                        <div class="dish-tags">
+                          <el-tag size="small" effect="plain" :type="getTasteTagType(dish.taste)">
+                            {{ getTasteLabel(dish.taste) }}
+                          </el-tag>
+                          <el-tag size="small" effect="plain" :type="dish.stock > 0 ? 'success' : 'danger'">
+                            {{ dish.stock > 0 ? `库存: ${dish.stock}` : '已售罄' }}
+                          </el-tag>
+                          <el-tag size="small" effect="plain" type="warning">
+                            周销量: {{ dish.weekSales }}
+                          </el-tag>
+                        </div>
+
+                        <div class="dish-footer">
+                          <div class="price-info">
+                            <span class="price-symbol">¥</span>
+                            <span class="price-value">{{ dish.price.toFixed(2) }}</span>
+                          </div>
+                          <el-button 
+                            type="primary" 
+                            size="small" 
+                            class="add-button"
+                            :disabled="dish.stock === 0"
+                            @click.stop="addToCart(dish)">
+                            <el-icon><Plus /></el-icon>
+                          </el-button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 原有的按楼层展示窗口和菜品的部 -->
+              <div v-else class="meituan-layout">
+                <!-- 左侧窗口列表 -->
+                <div class="window-list">
+                  <div
+                    v-for="window in getFloorWindows(activeCanteen, selectedFloor)"
+                    :key="window.id"
+                    class="window-item"
+                    :class="{ active: selectedWindow?.id === window.id }"
+                    @click="selectWindow(window)"
+                  >
+                    <div class="window-image">
+                      <el-image
+                        :src="window.image_url || ''"
+                        fit="cover"
+                      >
+                        <template #error>
+                          <div class="window-image-placeholder">
+                            <el-icon><Picture /></el-icon>
+                          </div>
+                        </template>
+                      </el-image>
+                    </div>
+                    <div class="window-info">
+                      <div class="window-name">{{ window.name }}</div>
+                      <div class="window-status" :class="{ closed: !isWindowOpen(window) }">
+                        <el-icon v-if="isWindowOpen(window)"><CircleCheck /></el-icon>
+                        <el-icon v-else><CircleClose /></el-icon>
+                        <span>{{ isWindowOpen(window) ? '营业中' : '已打烊' }}</span>
+                      </div>
+                      <div class="window-hours">
+                        <el-icon><Timer /></el-icon>
+                        <span>{{ window.operatingHours }}</span>
+                      </div>
+                      <div class="window-description" v-if="window.description">
+                        {{ window.description }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 右侧内容区域 -->
+                <div class="dishes-container">
+                  <!-- 菜品列表 -->
+                  <div class="dishes-list">
+                    <template v-if="selectedWindow">
+                      <div v-if="isWindowOpen(selectedWindow)">
+                        <!-- 添加窗口信息卡片 -->
+                        <el-card class="window-info-card">
+                          <div class="window-header">
+                            <h3>{{ selectedWindow.name }}</h3>
+                            <div class="window-tags">
+                              <el-tag size="small" type="success">营业中</el-tag>
+                              <el-tag size="small" type="info">{{ selectedWindow.operatingHours }}</el-tag>
+                            </div>
+                          </div>
+                        </el-card>
+
+                        <!-- 优化搜索过滤栏 -->
+                        <div class="window-filter-controls">
+                          <el-input
+                            v-model="windowSearchQuery"
+                            placeholder="搜索当前窗口菜品"
+                            class="filter-item"
+                            clearable
+                            @input="handleWindowSearch">
+                            <template #prefix>
+                              <el-icon><Search /></el-icon>
+                            </template>
+                          </el-input>
+                          
+                          <!-- 添加口味筛选 -->
+                          <el-select
+                            v-model="selectedTaste"
+                            placeholder="选择口味"
+                            clearable
+                            class="filter-item"
+                            @change="handleFilter">
+                            <el-option
+                              v-for="taste in tasteOptions"
+                              :key="taste.value"
+                              :label="taste.label"
+                              :value="taste.value"
+                            />
+                          </el-select>
+                          
+                          <!-- 排序选项 -->
+                          <el-select
+                            v-model="sortOption"
+                            placeholder="排序方式"
+                            class="filter-item"
+                            @change="handleSort">
+                            <el-option 
+                              label="全部"
+                              value="">
+                            </el-option>
+                            <el-option label="默认排序" value="default" />
+                            <el-option label="价格从低到高" value="price-asc" />
+                            <el-option label="价格从高到低" value="price-desc" />
+                            <el-option label="销量从高到低" value="sales-desc" />
+                            <el-option label="销量从低到高" value="sales-asc" />
+                          </el-select>
+                        </div>
+
+                        <!-- 添加分类标签导航 -->
+                        <div class="category-nav">
+                          <el-tag
+                            v-for="category in dishCategories"
+                            :key="category"
+                            :type="selectedCategory === category ? 'primary' : 'info'"
+                            effect="plain"
+                            class="category-tag"
+                            @click="selectCategory(category)">
+                            {{ category }}
+                          </el-tag>
+                        </div>
+
+                        <!-- 优化菜品卡片布局 -->
+                        <div class="dishes-grid">
+                          <div v-for="dish in finalFilteredDishes" 
+                               :key="dish.id" 
+                               class="dish-card"
+                               @click="goToDishDetail(dish.id)">
+                            <div class="dish-card-content">
+                              <el-image :src="dish.image_url" class="dish-image" fit="cover">
+                                <template #error>
+                                  <div class="image-placeholder">
+                                    <el-icon><Picture /></el-icon>
+                                  </div>
+                                </template>
+                              </el-image>
+                              
+                              <div class="dish-info">
+                                <div class="dish-header">
+                                  <div class="dish-title">
+                                    <h4 class="dish-name">{{ dish.name }}</h4>
+                                    <div class="dish-window-info">
+                                      <el-tag size="small" effect="plain" type="info">
+                                        {{ dish.windowName }} · {{ getFloorByWindowId(dish.windowId) }}层
+                                      </el-tag>
+                                    </div>
+                                  </div>
+                                  <el-tag 
+                                    size="small" 
+                                    :type="getCategoryType(dish.category) || 'info'">
+                                    {{ dish.category }}
+                                  </el-tag>
+                                </div>
+                                
+                                <p class="dish-description">{{ dish.description }}</p>
+                                
+                                <div class="dish-tags">
+                                  <el-tag size="small" effect="plain" :type="getTasteTagType(dish.taste)">
+                                    {{ getTasteLabel(dish.taste) }}
+                                  </el-tag>
+                                  <el-tag size="small" effect="plain" :type="dish.stock > 0 ? 'success' : 'danger'">
+                                    {{ dish.stock > 0 ? `库存: ${dish.stock}` : '已售罄' }}
+                                  </el-tag>
+                                  <el-tag size="small" effect="plain" type="warning">
+                                    周销量: {{ dish.weekSales }}
+                                  </el-tag>
+                                </div>
+
+                                <div class="dish-footer">
+                                  <div class="price-info">
+                                    <span class="price-symbol">¥</span>
+                                    <span class="price-value">{{ dish.price.toFixed(2) }}</span>
+                                  </div>
+                                  <el-button 
+                                    type="primary" 
+                                    size="small" 
+                                    class="add-button"
+                                    :disabled="dish.stock === 0"
+                                    @click.stop="addToCart(dish)">
+                                    <el-icon><Plus /></el-icon>
+                                  </el-button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else class="window-closed">
+                        <el-empty
+                          description="该窗口暂无菜品"
+                          :image-size="200">
+                          <template #description>
+                            <div class="empty-state-content">
+                              <h3 class="empty-title">{{ selectedWindow.name }}</h3>
+                              <p class="empty-status">{{ isWindowOpen(selectedWindow) ? '营业中' : '已打烊' }}</p>
+                              <p class="empty-hours">营业时间：{{ selectedWindow.operatingHours }}</p>
+                              <p class="empty-hint">建议您选择其他窗口</p>
+                            </div>
+                          </template>
+                          <el-button type="primary" @click="selectedWindow = null">返回选择</el-button>
+                        </el-empty>
+                      </div>
+                    </template>
+                    <div v-else class="no-window-selected">
+                      <el-empty
+                        description="请选择窗口"
+                        :image-size="200">
+                        <template #description>
+                          <div class="empty-state-content">
+                            <p class="empty-hint">从左侧选您感兴趣的窗口</p>
+                            <p class="empty-sub-hint">当前层共有 {{ displayWindows.length }} 个窗口可选</p>
+                          </div>
+                        </template>
+                      </el-empty>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </el-tab-pane>
-      </el-tabs>
-    </div>
-
-    <!-- 结算确认对话框 -->
-    <el-dialog
-      v-model="checkoutDialogVisible"
-      title="确认订单"
-      width="400px">
-      <div class="checkout-content">
-        <div class="checkout-items">
-          <div v-for="item in cartItems" 
-               :key="item.id" 
-               class="checkout-item">
-            <span class="item-name">{{ item.name }}</span>
-            <span class="item-quantity">x{{ item.quantity }}</span>
-            <span class="item-price">¥{{ item.price * item.quantity }}</span>
-          </div>
-        </div>
-        
-        <el-divider></el-divider>
-        
-        <div class="checkout-form">
-          <el-form :model="checkoutForm" :rules="checkoutRules" ref="checkoutFormRef">
-            <el-form-item label="就餐时间" prop="diningTime">
-              <el-time-select
-                v-model="checkoutForm.diningTime"
-                :picker-options="{
-                  start: '10:30',
-                  step: '00:15',
-                  end: '20:00'
-                }"
-                placeholder="选���就餐时间">
-              </el-time-select>
-            </el-form-item>
-            
-            <el-form-item label="就餐方式" prop="diningType">
-              <el-radio-group v-model="checkoutForm.diningType">
-                <el-radio label="dine_in">堂食</el-radio>
-                <el-radio label="take_out">打包</el-radio>
-              </el-radio-group>
-            </el-form-item>
-
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="checkoutForm.remark"
-                type="textarea"
-                placeholder="请输入备注信息">
-              </el-input>
-            </el-form-item>
-          </el-form>
-        </div>
-        
-        <div class="checkout-total">
-          <span>合计:</span>
-          <span class="total-price">¥{{ totalPrice }}</span>
-        </div>
+          </el-tab-pane>
+        </el-tabs>
       </div>
-      
-      <template #footer>
-        <el-button @click="checkoutDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitOrder">提交订单</el-button>
-      </template>
-    </el-dialog>
+
+      <!-- 结算确认对话框 -->
+      <el-dialog
+        v-model="checkoutDialogVisible"
+        title="确认订单"
+        width="400px">
+        <div class="checkout-content">
+          <div class="checkout-items">
+            <div v-for="item in cartItems" 
+                 :key="item.id" 
+                 class="checkout-item">
+              <span class="item-name">{{ item.name }}</span>
+              <span class="item-quantity">x{{ item.quantity }}</span>
+              <span class="item-price">¥{{ item.price * item.quantity }}</span>
+            </div>
+          </div>
+          
+          <el-divider></el-divider>
+          
+          <div class="checkout-form">
+            <el-form :model="checkoutForm" :rules="checkoutRules" ref="checkoutFormRef">
+              <el-form-item label="就餐时间" prop="diningTime">
+                <el-time-select
+                  v-model="checkoutForm.diningTime"
+                  :picker-options="{
+                    start: '10:30',
+                    step: '00:15',
+                    end: '20:00'
+                  }"
+                  placeholder="选就餐时间">
+                </el-time-select>
+              </el-form-item>
+              
+              <el-form-item label="就餐方式" prop="diningType">
+                <el-radio-group v-model="checkoutForm.diningType">
+                  <el-radio label="dine_in">堂食</el-radio>
+                  <el-radio label="take_out">打包</el-radio>
+                </el-radio-group>
+              </el-form-item>
+
+              <el-form-item label="备注" prop="remark">
+                <el-input
+                  v-model="checkoutForm.remark"
+                  type="textarea"
+                  placeholder="请输入备注信息">
+                </el-input>
+              </el-form-item>
+            </el-form>
+          </div>
+          
+          <div class="checkout-total">
+            <span>合计:</span>
+            <span class="total-price">¥{{ totalPrice }}</span>
+          </div>
+        </div>
+        
+        <template #footer>
+          <el-button @click="checkoutDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitOrder">提交订单</el-button>
+        </template>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
@@ -613,6 +619,7 @@ import {
 import CampusMap3D from './components/CampusMap3D.vue'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
+import CanteenTrafficMonitor from './components/CanteenTrafficMonitor.vue'
 
 export default {
   name: 'DishList',
@@ -626,7 +633,8 @@ export default {
     ShoppingCart,
     CircleCheck,
     CircleClose,
-    CampusMap3D
+    CampusMap3D,
+    CanteenTrafficMonitor
   },
   setup() {
     const router = useRouter()
@@ -734,7 +742,7 @@ export default {
             operatingHours: '10:30-19:00', 
             status: 'open',
             image_url: 'https://example.com/window8.jpg',
-            description: '东北特色菜品，份量实惠'
+            description: '东北特色菜品，份量惠'
           },
           { 
             id: 9, 
@@ -849,7 +857,7 @@ export default {
           id: 3,
           name: '回锅肉',
           price: 18,
-          description: '传统���式回锅肉',
+          description: '传统式回锅肉',
           category: '川菜',
           taste: 'savory',
           image_url: 'https://example.com/huiguo.jpg',
@@ -897,7 +905,7 @@ export default {
           id: 7,
           name: '担担面',
           price: 12,
-          description: '正宗川式������面，香辣可口',
+          description: '正宗川式面，香辣可口',
           category: '面食',
           taste: 'spicy',
           image_url: 'https://example.com/dandanmian.jpg',
@@ -922,7 +930,7 @@ export default {
           name: '宫保鸡丁',
           price: 16,
           description: '经典川菜',
-          category: '川��',
+          category: '川',
           taste: 'spicy',
           image_url: 'https://example.com/gongbao.jpg',
           stock: 20,
@@ -967,7 +975,7 @@ export default {
     }
 
     // 测试数据 - 菜品分类
-    const categories = ['川菜', '本帮��', '粤菜', '面食', '素菜', '饮品']
+    const categories = ['川菜', '本帮', '粤菜', '面食', '素菜', '饮品']
 
     // 添加菜品分类样式映射函数
     const getCategoryType = (category) => {
@@ -1059,7 +1067,7 @@ export default {
       }
     }
 
-    // ��改加载窗口菜品的函数
+    // 改加载窗口菜品的函数
     const loadWindowDishes = async (windowId) => {
       try {
         // 使用测试数据
@@ -1115,7 +1123,7 @@ export default {
     // 处理排序
     const handleSort = () => {
       if (!sortOption.value || sortOption.value === 'default') {
-        // 如果选择"全部"或"默��排序"，恢复随机顺序
+        // 如果选择"全部"或"默排序"，恢复随机顺序
         allDishes.value = [...allDishes.value].sort(() => Math.random() - 0.5)
       }
     }
@@ -1157,7 +1165,7 @@ export default {
         result = result.filter(dish => dish.category === selectedCategory.value)
       }
 
-      // 应用排���
+      // 应用排序
       if (sortOption.value) {
         result = [...result].sort((a, b) => {
           switch (sortOption.value) {
@@ -1204,7 +1212,7 @@ export default {
 
     // 新增楼层切换函数
     const toggleFloor = (floor) => {
-      // 如果点击的是当前选中的楼层，则取���选择，显示全部菜品
+      // 如果点击的是当前选中的楼层，则取选择，显示全部菜品
       if (selectedFloor.value === floor) {
         selectedFloor.value = null
         selectedWindow.value = null
@@ -1245,7 +1253,7 @@ export default {
       router.push(`/student/dishes/${dishId}`)
     }
 
-    // 在 setup 中添���新的方法
+    // 在 setup 中添新的方法
     const getTasteLabel = (taste) => {
       const tasteMap = {
         'spicy': '麻辣',
@@ -1266,7 +1274,7 @@ export default {
       return typeMap[taste] || ''
     }
 
-    // 在 setup 中添加购物车相关的响应���数据和方法
+    // 在 setup 中添加购物车相关的响应数据和方法
     const cartData = ref({}) // 使用对象存储每个窗口的购物车数据
     const cartDrawerVisible = ref(false)
     const checkoutDialogVisible = ref(false)
@@ -1436,12 +1444,12 @@ export default {
           activeCanteen.value = state.activeCanteen
           await nextTick()
           
-          // 恢复楼层选���
+          // 恢复楼层选
           if (state.selectedFloor) {
             selectedFloor.value = state.selectedFloor
             await nextTick()
             
-            // 恢复窗口选���
+            // 恢复窗口选
             if (state.selectedWindow) {
               const windowList = getFloorWindows(state.activeCanteen, state.selectedFloor)
               const window = windowList.find(w => w.id === state.selectedWindow.id)
@@ -1487,7 +1495,7 @@ export default {
       }
     })
 
-    // 添���防抖函数
+    // 添防抖函数
     const debounce = (fn, delay) => {
       let timer = null
       return function (...args) {
@@ -1558,7 +1566,7 @@ export default {
         });
       });
 
-      // 使用 Fisher-Yates 洗牌算法随机打乱菜品顺序
+      // 用 Fisher-Yates 洗牌算法随机打乱菜品顺序
       for (let i = allCanteenDishes.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [allCanteenDishes[i], allCanteenDishes[j]] = [allCanteenDishes[j], allCanteenDishes[i]];
@@ -1669,7 +1677,7 @@ export default {
     // 添加地图显示状态的响应式变量
     const isMapVisible = ref(true)
 
-    // 添加切换地图显示/隐藏���方法
+    // 添加切换地图显示/隐藏方法
     const toggleMap = () => {
       isMapVisible.value = !isMapVisible.value
     }
@@ -1750,6 +1758,10 @@ export default {
 </script>
 
 <style scoped>
+.dish-list-container {
+  padding: 0; /* 移除最外层容器的内边距 */
+}
+
 .dish-list {
   padding: 0; /* 移除最外层容器的内边距 */
 }
@@ -2046,7 +2058,7 @@ export default {
   padding: 8px;
 }
 
-/* 响应��调整 */
+/* 响应调整 */
 @media (max-width: 768px) {
   .dishes-grid {
     grid-template-columns: 1fr;
@@ -2281,7 +2293,7 @@ export default {
   color: #606266;
 }
 
-/* 添加美团��格双列布局样式 */
+/* 添加美团格双列布局样式 */
 .meituan-layout {
   display: flex;
   margin-top: 20px;
@@ -3090,557 +3102,1139 @@ export default {
   }
 }
 
-/* 添加过渡效果 */
-.floor-nav .nav-item {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  /* 添加过渡效果 */
+  .floor-nav .nav-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-/* 确保与重置按钮度对齐 */
-.filter-controls {
-  display: flex;
-  gap: 8px; /* 从15px减小到8px */
-  flex-wrap: wrap;
-  padding: 0 10px; /* 从20px减小到10px */
-}
-
-@media (max-width: 768px) {
+  /* 确保与重置按钮度对齐 */
   .filter-controls {
-    padding: 0 6px;
+    display: flex;
+    gap: 8px; /* 从15px减小到8px */
+    flex-wrap: wrap;
+    padding: 0 10px; /* 从20px减小到10px */
   }
-}
 
-/* 添加全部菜品展示的样式 */
-.all-dishes-container {
-  padding: 4px; /* 减小边距 */
-  background: transparent; /* 移除背景色 */
-}
+  @media (max-width: 768px) {
+    .filter-controls {
+      padding: 0 6px;
+    }
+  }
 
-.dishes-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);  /* 两列布局 */
-  gap: 20px;
-  padding: 16px 0;
-}
+  /* 添加全部菜品展示的样式 */
+  .all-dishes-container {
+    padding: 4px; /* 减小边距 */
+    background: transparent; /* 移除背景色 */
+  }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
   .dishes-grid {
-    grid-template-columns: 1fr;  /* 移动端单列布局 */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);  /* 两列布局 */
+    gap: 20px;
+    padding: 16px 0;
   }
-}
 
-/* 添加新的样式 */
-.dish-title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .dishes-grid {
+      grid-template-columns: 1fr;  /* 移动端单列布局 */
+    }
+  }
 
-.dish-window-info {
-  font-size: 12px;
-  color: #909399;
-}
-
-.dish-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
-}
-
-/* 调整标签样式 */
-.dish-window-info :deep(.el-tag) {
-  font-size: 12px;
-  height: 20px;
-  line-height: 18px;
-  padding: 0 6px;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
+  /* 添加新的样式 */
   .dish-title {
-    gap: 2px;
-  }
-  
-  .dish-window-info {
-    font-size: 11px;
-  }
-}
-
-/* 添加一个提示样式 */
-.floor-nav .nav-item.active:hover {
-  opacity: 0.8;
-  cursor: pointer;
-}
-
-/* 修改提示文字的样式 */
-.floor-nav .nav-item.active::after {
-  content: '点击返回全部';
-  position: absolute;
-  bottom: -24px;  /* 调整位置，避免遮挡 */
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: #909399;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;  /* 防止提示文字影响鼠标事件 */
-  z-index: 1;  /* 确保提示文字显示在上 */
-  background: rgba(255, 255, 255, 0.9);  /* 添加半透明背景 */
-  padding: 4px 8px;  /* 添加内边距 */
-  border-radius: 4px;  /* 圆角 */
-}
-
-.floor-nav .nav-item.active:hover::after {
-  opacity: 1;
-}
-
-/* 添加容器样式以防止提示文字溢出 */
-.nav-section.floor-nav {
-  position: relative;
-  padding-bottom: 24px;  /* 为提示文字预留空间 */
-}
-
-/* 添加新的样式 */
-.cart-window-group {
-  border-bottom: 1px solid #ebeef5;
-  padding: 8px 0; /* 从16px减小到8px */
-}
-
-.cart-window-group:last-child {
-  border-bottom: none;
-}
-
-.cart-window-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10px; /* 从20px减小到10px */
-  margin-bottom: 6px; /* 从12px减小到6px */
-}
-
-.cart-items-list {
-  padding: 0 10px; /* 从20px减小到10px */
-}
-
-.window-cart-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px; /* 从12px减小到6px */
-  padding-top: 6px; /* 从12px减小到6px */
-  border-top: 1px dashed #ebeef5;
-}
-
-.window-total-info {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-/* 修改dishes-grid的样式 */
-.dishes-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 固定双列布局 */
-  gap: 8px; /* 减小卡片间距 */
-  padding: 8px;
-  width: 100%;
-}
-
-/* 修改dish-card的样式使其更紧凑 */
-.dish-card {
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: all 0.3s;
-  cursor: pointer;
-  border: 1px solid #ebeef5;
-  width: 100%; /* 确保卡片填充列宽 */
-}
-
-/* 调整图片尺寸 */
-.dish-image {
-  width: 100%;
-  height: 120px; /* 减小图片高度 */
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-/* 调整卡片内容间距 */
-.dish-card-content {
-  padding: 8px;
-}
-
-/* 调整菜品信息样式 */
-.dish-info {
-  padding: 0 4px;
-}
-
-/* 调整菜品名称大小 */
-.dish-name {
-  font-size: 14px;
-  margin-bottom: 4px;
-  /* 添加文字溢出省略 */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 调整描述文字大小和行数 */
-.dish-description {
-  font-size: 12px;
-  -webkit-line-clamp: 1; /* 只显示一行 */
-  line-clamp: 1;         /* 添加标准属性 */
-  margin-bottom: 4px;
-}
-
-/* 调整标签样式 */
-.dish-tags {
-  margin: 4px 0;
-  gap: 4px;
-}
-
-.dish-tags :deep(.el-tag) {
-  font-size: 10px;
-  padding: 0 4px;
-  height: 18px;
-  line-height: 16px;
-}
-
-/* 调整价格和按钮样式 */
-.dish-footer {
-  margin-top: 8px;
-}
-
-.price-value {
-  font-size: 16px;
-}
-
-.add-button {
-  padding: 4px;
-  min-height: 24px;
-  height: 24px;
-  width: 24px;
-}
-
-/* 调整窗口信息标签 */
-.dish-window-info :deep(.el-tag) {
-  font-size: 10px;
-  height: 18px;
-  line-height: 16px;
-  padding: 0 4px;
-}
-
-/* 适配VIVO X80的媒体查询 */
-@media screen and (max-width: 393px) {
-  .dishes-grid {
-    gap: 2px; /* 进一步减小间距 */
-    padding: 1px;
-  }
-  
-  .filter-controls {
-    padding: 0 6px;
+    display: flex;
+    flex-direction: column;
     gap: 4px;
   }
-  
-  .filter-group {
-    gap: 2px;
+
+  .dish-window-info {
+    font-size: 12px;
+    color: #909399;
   }
-  
-  .dish-card-content {
-    padding: 3px;
+
+  .dish-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
   }
-  
-  /* 减小卡片阴影和圆角 */
-  .dish-card {
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-  
-  /* 调整窗口和餐厅卡片的边距 */
-  .window-info-card,
-  .canteen-info,
-  .filter-card {
-    margin-bottom: 4px;
-    border-radius: 4px;
-  }
-  
-  /* 减小楼层导航的间距 */
-  .floor-nav {
-    margin-bottom: 6px;
+
+  /* 调整标签样式 */
+  .dish-window-info :deep(.el-tag) {
+    font-size: 12px;
+    height: 20px;
+    line-height: 18px;
     padding: 0 6px;
   }
-  
-  .floor-nav .nav-list {
-    gap: 3px;
+
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .dish-title {
+      gap: 2px;
+    }
+    
+    .dish-window-info {
+      font-size: 11px;
+    }
   }
-}
 
-/* 优化滚动体验 */
-.dishes-list {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  padding-bottom: 120px; /* 为底部购物车按钮留出空间 */
-}
+  /* 添加一个提示样式 */
+  .floor-nav .nav-item.active:hover {
+    opacity: 0.8;
+    cursor: pointer;
+  }
 
-/* 调整购物车按钮位置 */
-.floating-cart-button {
-  right: 16px;
-  bottom: 80px;
-}
+  /* 修改提示文字的样式 */
+  .floor-nav .nav-item.active::after {
+    content: '点击返回全部';
+    position: absolute;
+    bottom: -24px;  /* 调整位置，避免遮挡 */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #909399;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;  /* 防止提示文字影响鼠标事件 */
+    z-index: 1;  /* 确保提示文字显示在上 */
+    background: rgba(255, 255, 255, 0.9);  /* 添加半透明背景 */
+    padding: 4px 8px;  /* 添加内边距 */
+    border-radius: 4px;  /* 圆角 */
+  }
 
-.cart-button {
-  width: 40px;
-  height: 40px;
-  font-size: 18px;
-}
+  .floor-nav .nav-item.active:hover::after {
+    opacity: 1;
+  }
 
-/* 修改dishes-grid的样式，减小整体边距 */
-.dishes-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  padding: 4px; /* 减整体padding */
-    width: 100%;
-  margin: 0; /* 确保没有额外边距 */
-}
+  /* 添加容器样式以防止提示文字溢出 */
+  .nav-section.floor-nav {
+    position: relative;
+    padding-bottom: 24px;  /* 为提示文字预留空间 */
+  }
 
-/* 修改dishes-container的样式，减小内边距 */
-.dishes-container {
-  padding: 0 6px; /* 减小左右内边距 */
-}
+  /* 添加新的样式 */
+  .cart-window-group {
+    border-bottom: 1px solid #ebeef5;
+    padding: 8px 0; /* 从16px减小到8px */
+  }
 
-/* 修改all-dishes-container的样式 */
-.all-dishes-container {
-  padding: 8px 6px; /* 减小边距 */
-  background: #fff;
-  border-radius: 8px;
-}
+  .cart-window-group:last-child {
+    border-bottom: none;
+  }
 
-/* 调整卡片样式 */
-.dish-card {
-  margin: 0; /* 移除卡片边距 */
-  border-radius: 6px; /* 稍微减小圆角 */
-}
+  .cart-window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px; /* 从20px减小到10px */
+    margin-bottom: 6px; /* 从12px减小到6px */
+  }
 
-/* 调整筛选区域样式，使其更紧凑 */
-.window-filter-controls {
-  margin: 8px 6px; /* 减小边距 */
-  gap: 8px;
-}
+  .cart-items-list {
+    padding: 0 10px; /* 从20px减小到10px */
+  }
 
-/* 调整分类导航样式 */
-.category-nav {
-  margin: 8px 6px; /* 减小边距 */
-  gap: 6px;
-}
+  .window-cart-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px; /* 从12px减小到6px */
+    padding-top: 6px; /* 从12px减小到6px */
+    border-top: 1px dashed #ebeef5;
+  }
 
-/* VIVO X80适配 */
-@media screen and (max-width: 393px) {
+  .window-total-info {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  /* 修改dishes-grid的样式 */
   .dishes-grid {
-    padding: 2px; /* 进一步减小边距 */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 固定双列布局 */
+    gap: 8px; /* 减小卡片间距 */
+    padding: 8px;
+    width: 100%;
+  }
+
+  /* 修改dish-card的样式使其更紧凑 */
+  .dish-card {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: 1px solid #ebeef5;
+    width: 100%; /* 确保卡片填充列宽 */
+  }
+
+  /* 调整图片尺寸 */
+  .dish-image {
+    width: 100%;
+    height: 120px; /* 减小图片高度 */
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+
+  /* 调整卡内容间距 */
+  .dish-card-content {
+    padding: 8px;
+  }
+
+  /* 调整菜品信息样式 */
+  .dish-info {
+    padding: 0 4px;
+  }
+
+  /* 调整菜品名称大小 */
+  .dish-name {
+    font-size: 14px;
+    margin-bottom: 4px;
+    /* 添加文字溢出省略 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 调整描述文字大小和行数 */
+  .dish-description {
+    font-size: 12px;
+    -webkit-line-clamp: 1; /* 只显示一行 */
+    line-clamp: 1;         /* 添加标准属性 */
+    margin-bottom: 4px;
+  }
+
+  /* 调整标签样式 */
+  .dish-tags {
+    margin: 4px 0;
+    gap: 4px;
+  }
+
+  .dish-tags :deep(.el-tag) {
+    font-size: 10px;
+    padding: 0 4px;
+    height: 18px;
+    line-height: 16px;
+  }
+
+  /* 调整价格和按钮样式 */
+  .dish-footer {
+    margin-top: 8px;
+  }
+
+  .price-value {
+    font-size: 16px;
+  }
+
+  .add-button {
+    padding: 4px;
+    min-height: 24px;
+    height: 24px;
+    width: 24px;
+  }
+
+  /* 调整窗口信息标签 */
+  .dish-window-info :deep(.el-tag) {
+    font-size: 10px;
+    height: 18px;
+    line-height: 16px;
+    padding: 0 4px;
+  }
+
+  /* 适配VIVO X80的媒体查询 */
+  @media screen and (max-width: 393px) {
+    .dishes-grid {
+      gap: 2px; /* 进一步减小间距 */
+      padding: 1px;
+    }
+    
+    .filter-controls {
+      padding: 0 6px;
+      gap: 4px;
+    }
+    
+    .filter-group {
+      gap: 2px;
+    }
+    
+    .dish-card-content {
+      padding: 3px;
+    }
+    
+    /* 减小卡片阴影和圆角 */
+    .dish-card {
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* 调整窗口和餐厅卡片的边距 */
+    .window-info-card,
+    .canteen-info,
+    .filter-card {
+      margin-bottom: 4px;
+      border-radius: 4px;
+    }
+    
+    /* 减小楼层导航的间距 */
+    .floor-nav {
+      margin-bottom: 6px;
+      padding: 0 6px;
+    }
+    
+    .floor-nav .nav-list {
+      gap: 3px;
+    }
+  }
+
+  /* 优化滚动体验 */
+  .dishes-list {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 120px; /* 为底部购物车按钮留出空间 */
+  }
+
+  /* 调整购物车按钮位置 */
+  .floating-cart-button {
+    right: 16px;
+    bottom: 80px;
+  }
+
+  .cart-button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  /* 修改dishes-grid的样式，减小整体边距 */
+  .dishes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 4px; /* 减整体padding */
+      width: 100%;
+    margin: 0; /* 确保没有额外边距 */
+  }
+
+  /* 修改dishes-container的样式，减小内边距 */
+  .dishes-container {
+    padding: 0 6px; /* 减小左右内边距 */
+  }
+
+  /* 修改all-dishes-container的样式 */
+  .all-dishes-container {
+    padding: 8px 6px; /* 减小边距 */
+    background: #fff;
+    border-radius: 8px;
+  }
+
+  /* 调整卡片样式 */
+  .dish-card {
+    margin: 0; /* 移除卡片边距 */
+    border-radius: 6px; /* 稍微减小圆角 */
+  }
+
+  /* 调整筛选区域样式，使其更紧凑 */
+  .window-filter-controls {
+    margin: 8px 6px; /* 减小边距 */
+    gap: 8px;
+  }
+
+  /* 调整分类导航样式 */
+  .category-nav {
+    margin: 8px 6px; /* 减小边距 */
     gap: 6px;
   }
-  
-  .dishes-container {
-    padding: 0 4px; /* 减小容器边距 */
+
+  /* VIVO X80适配 */
+  @media screen and (max-width: 393px) {
+    .dishes-grid {
+      padding: 2px; /* 进一步减小边距 */
+      gap: 6px;
+    }
+    
+    .dishes-container {
+      padding: 0 4px; /* 减小容器边距 */
+    }
+    
+    .all-dishes-container {
+      padding: 6px 4px;
+    }
+    
+    .window-filter-controls,
+    .category-nav {
+      margin: 6px 4px;
+    }
+    
+    /* 调整卡片内容边距 */
+    .dish-card-content {
+      padding: 6px;
+    }
+    
+    /* 调整图片下方内容区域边距 */
+    .dish-info {
+      padding: 0 2px;
+    }
   }
-  
-  .all-dishes-container {
-    padding: 6px 4px;
+
+  /* 确保内容区域填充满屏幕宽度 */
+  .meituan-layout {
+    margin: 0;
+    width: 100%;
   }
-  
-  .window-filter-controls,
-  .category-nav {
-    margin: 6px 4px;
+
+  /* 调整列表容器样式 */
+  .dishes-list {
+    padding: 0 0 60px 0; /* 从120px减小到60px */
   }
-  
-  /* 调整卡片内容边距 */
-  .dish-card-content {
-    padding: 6px;
-  }
-  
-  /* 调整图片下方内容区域边距 */
-  .dish-info {
-    padding: 0 2px;
-  }
-}
 
-/* 确保内容区域填充满屏幕宽度 */
-.meituan-layout {
-  margin: 0;
-  width: 100%;
-}
-
-/* 调整列表容器样式 */
-.dishes-list {
-  padding: 0 0 60px 0; /* 从120px减小到60px */
-}
-
-/* 修改filter-controls的样式 */
-.filter-controls {
-  display: flex;
-  gap: 8px; /* 从15px减小到8px */
-  flex-wrap: wrap;
-  padding: 0 10px; /* 从20px减小到10px */
-}
-
-/* 添加新的样式类用于口味和价格筛选的容器 */
-.filter-group {
-  display: flex;
-  gap: 4px; /* 从8px减小到4px */
-  flex: 1;
-}
-
-/* 修改filter-item的样式 */
-.filter-item {
-  min-width: 160px; /* 减小最小宽度 */
-}
-
-/* 搜索框单独占一行 */
-.search-filter {
-  width: 100%;
-}
-
-/* 响应式调整 - 移动端样式 */
-@media screen and (max-width: 393px) {
+  /* 修改filter-controls的样式 */
   .filter-controls {
-    padding: 0 8px;
-    gap: 8px;
+    display: flex;
+    gap: 8px; /* 从15px减小到8px */
+    flex-wrap: wrap;
+    padding: 0 10px; /* 从20px减小到10px */
   }
 
+  /* 添加新的样式类用于口味和价格筛选的容器 */
   .filter-group {
-    flex-direction: row; /* 保持水平排列 */
-    gap: 8px;
-    width: 100%;
-  }
-
-  /* 让筛选框在��动端各占50%宽度 */
-  .filter-group .filter-item {
-    flex: 1; /* 均分空间 */
-    min-width: 0; /* 移除最小宽度限制 */
-    width: calc(50% - 4px); /* 考虑间距的50%宽度 */
-  }
-
-  /* 调整下拉框的样式使其更紧凑 */
-  .filter-group :deep(.el-select) {
-    width: 100%;
-  }
-
-  .filter-group :deep(.el-input__wrapper) {
-    padding: 0 8px;
-  }
-
-  .filter-group :deep(.el-input__inner) {
-    font-size: 13px;
-    height: 32px;
-  }
-
-  /* 调整重置按钮样式 */
-  .filter-controls .el-button {
-    width: 100%;
-    margin-top: 8px;
-    height: 32px;
-  }
-}
-
-/* 其他移动端尺寸的适配 */
-@media screen and (min-width: 394px) and (max-width: 768px) {
-  .filter-controls {
-    padding: 0 10px;
-    gap: 10px;
-  }
-
-  .filter-group {
-    flex-direction: row;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .filter-group .filter-item {
+    display: flex;
+    gap: 4px; /* 从8px减小到4px */
     flex: 1;
+  }
+
+  /* 修改filter-item的样式 */
+  .filter-item {
+    min-width: 160px; /* 减小最小宽度 */
+  }
+
+  /* 搜索框单独占一行 */
+  .search-filter {
+    width: 100%;
+  }
+
+  /* 响应式调整 - 移动端样式 */
+  @media screen and (max-width: 393px) {
+    .filter-controls {
+      padding: 0 8px;
+      gap: 8px;
+    }
+
+    .filter-group {
+      flex-direction: row; /* 保持水平排列 */
+      gap: 8px;
+      width: 100%;
+    }
+
+    /* 让筛选框在动端各占50%宽度 */
+    .filter-group .filter-item {
+      flex: 1; /* 均分空间 */
+      min-width: 0; /* 移除最小宽度限制 */
+      width: calc(50% - 4px); /* 考虑间距的50%宽度 */
+    }
+
+    /* 调整下拉框的样式使其更紧凑 */
+    .filter-group :deep(.el-select) {
+      width: 100%;
+    }
+
+    .filter-group :deep(.el-input__wrapper) {
+      padding: 0 8px;
+    }
+
+    .filter-group :deep(.el-input__inner) {
+      font-size: 13px;
+      height: 32px;
+    }
+
+    /* 调整重置按钮样式 */
+    .filter-controls .el-button {
+      width: 100%;
+      margin-top: 8px;
+      height: 32px;
+    }
+  }
+
+  /* 其他移动端尺寸的适配 */
+  @media screen and (min-width: 394px) and (max-width: 768px) {
+    .filter-controls {
+      padding: 0 10px;
+      gap: 10px;
+    }
+
+    .filter-group {
+      flex-direction: row;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .filter-group .filter-item {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  /* 添加搜索框包装器样式 */
+  .search-wrapper {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    align-items: center; /* 确保垂直居中对齐 */
+    height: 40px; /* 统一容器高度 */
+  }
+
+  /* 搜索框样式 - 占80%宽度 */
+  .search-filter {
+    flex: 0.8;
     min-width: 0;
   }
-}
 
-/* 添加搜索框包装器样式 */
-.search-wrapper {
-  width: 100%;
-  display: flex;
-  gap: 4px; /* 从8px减小到4px */
-  align-items: stretch; /* 确保子元素等高 */
-}
-
-/* 搜索框样式 */
-.search-filter {
-  flex: 1;
-}
-
-.search-filter :deep(.el-input__wrapper) {
-  height: 32px;
-  border-radius: 4px;
-}
-
-/* 搜索按钮样式 */
-.search-button {
-  height: 32px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-size: 13px;
-  border-radius: 4px;
-  margin: 0;
-  min-width: 56px;
-}
-
-/* 筛选组样式 */
-.filter-group {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-/* VIVO X80等移动端适配 */
-@media screen and (max-width: 393px) {
-  /* 调整筛选卡片整体样式 */
-  .filter-card {
-    margin: 4px 0;  /* 移除左右边距 */
+  /* 修改搜索框内部样式 */
+  .search-filter :deep(.el-input__wrapper) {
+    height: 40px; /* 与容器高度保持一致 */
+    line-height: 40px;
+    padding: 1px 11px; /* 统一内边距 */
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px #dcdfe6 inset; /* 统一边框样式 */
   }
 
-  .filter-card :deep(.el-card__body) {
-    padding: 4px;  /* 统一最小内边距 */
-  }
-
-  /* 调整筛选控件容器 */
-  .filter-controls {
-    padding: 0;  /* 移除内边距 */
+  /* 搜索按钮样式 - 占20%宽度 */
+  .search-button {
+    flex: 0.2;
+    height: 40px; /* 与搜索框保持相同高度 */
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 4px;
-    width: 100%;
+    font-size: 14px;
+    border-radius: 4px;
+    margin: 0;
+    min-width: 0;
+    white-space: nowrap;
+    background-color: #409EFF; /* 使用Element Plus的主题蓝色 */
+    border: none;
   }
 
-  /* 搜索区域调整 */
-  .search-wrapper {
-    gap: 4px;
-    padding: 0;
-    width: 100%;
+  /* 搜索按钮图标样式 */
+  .search-button .el-icon {
+    font-size: 16px;
+    margin-right: 2px;
   }
 
-  /* 筛选组调整 */
+  /* VIVO X80等移动端适配 */
+  @media screen and (max-width: 393px) {
+    .search-wrapper {
+      height: 36px; /* 移动端稍微降低高度 */
+    }
+    
+    .search-filter :deep(.el-input__wrapper) {
+      height: 36px;
+      line-height: 36px;
+    }
+    
+    .search-button {
+      height: 36px;
+      padding: 0 12px;
+    }
+    
+    .search-button span {
+      display: none;
+    }
+    
+    .search-button .el-icon {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+
+  /* 筛选组样式 */
   .filter-group {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  /* VIVO X80等移动端适配 */
+  @media screen and (max-width: 393px) {
+    /* 调整筛选卡片整体样式 */
+    .filter-card {
+      margin: 4px 0;  /* 移除左右边距 */
+    }
+
+    .filter-card :deep(.el-card__body) {
+      padding: 4px;  /* 统一最小内边距 */
+    }
+
+    /* 调整筛选控件容器 */
+    .filter-controls {
+      padding: 0;  /* 移除内边距 */
+      gap: 4px;
+      width: 100%;
+    }
+
+    /* 搜索区域调整 */
+    .search-wrapper {
+      gap: 4px;
+      padding: 0;
+      width: 100%;
+    }
+
+    /* 筛选组调整 */
+    .filter-group {
+      gap: 4px;
+      padding: 0;
+      width: 100%;
+      margin: 0;
+    }
+
+    /* 调整筛选框样式 */
+    .filter-group .filter-item {
+      width: calc(50% - 2px) !important;  /* 强制宽度 */
+      min-width: 0 !important;  /* 移除最小宽度限制 */
+      max-width: calc(50% - 2px) !important;  /* 限制最大宽度 */
+    }
+
+    /* 统一下拉框样式 */
+    .filter-group :deep(.el-select) {
+      width: 100%;
+    }
+
+    .filter-group :deep(.el-input__wrapper) {
+      height: 32px;
+      padding: 0 24px 0 8px;  /* 调整内边距，为下拉图标留出空间 */
+    }
+
+    /* 调整下拉框内部样式 */
+    .filter-group :deep(.el-input__inner) {
+      font-size: 12px;
+      padding: 0;
+    }
+
+    /* 调整下拉图标位置和大小 */
+    .filter-group :deep(.el-select .el-input__suffix) {
+      right: 4px;
+    }
+
+    .filter-group :deep(.el-select .el-input__suffix-inner) {
+      font-size: 12px;
+    }
+
+    /* 调整选项文字大小和显示 */
+    .filter-group :deep(.el-select-dropdown__item) {
+      font-size: 12px;
+      padding: 0 8px;
+    }
+
+    /* 文字溢出处理 */
+    .filter-group :deep(.el-select .el-input__inner) {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 重置按钮 */
+    .filter-controls .el-button {
+      margin: 4px 0 0;
+      width: 100%;
+      height: 32px;
+      font-size: 12px;
+    }
+
+    /* 搜索按钮 */
+    .search-button {
+      padding: 0 8px;
+      min-width: 48px;
+    }
+
+    /* 搜索框 */
+    .search-filter :deep(.el-input__wrapper) {
+      padding: 0 8px;
+    }
+  }
+
+  /* 添加地图切换按钮样式 */
+  .map-toggle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1001;
+  }
+
+  .toggle-button {
+    display: flex;
+    align-items: center;
     gap: 4px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 修改地图组件样式，添加过渡效果 */
+  .map-section {
+    transition: all 0.3s ease;
+    height: 300px;
+    margin-bottom: 10px; /* 从20px减小到10px */
+    border-radius: 6px; /* 从8px减小到6px */
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+
+  /* VIVO X80等移动端适配 */
+  @media screen and (max-width: 393px) {
+    .map-toggle {
+      top: 4px;
+      right: 4px;
+    }
+
+    .toggle-button {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .toggle-button .el-icon {
+      font-size: 14px;
+    }
+
+    .map-section {
+      height: 200px;
+      margin-bottom: 6px; /* 从10px减小到6px */
+    }
+  }
+
+  /* 修改空状态容器的样式 */
+  .no-window-selected {
+    height: calc(100vh - 140px); /* 从180px减小到140px */
+    text-align: center;
     padding: 0;
-  width: 100%;
+    background: #fff;
+    border-radius: 8px;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 修改el-empty组件的样式 */
+  .no-window-selected :deep(.el-empty) {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     margin: 0;
   }
 
-  /* 调整筛选框样式 */
+  /* 调整空状态内容的布局 */
+  .empty-state-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 0 15px;
+  }
+
+  /* VIVO X80等移动端适配 */
+  @media screen and (max-width: 393px) {
+    .no-window-selected {
+      height: calc(100vh - 120px); /* 从160px减小到120px */
+    }
+    
+    .dishes-list {
+      padding: 0 0 50px 0; /* 从60px减小到50px */
+    }
+    
+    .dishes-container {
+      padding: 0 4px 4px 4px; /* 从6px减小到4px */
+    }
+    
+    .empty-state-content {
+      padding: 0 10px;
+    }
+    
+    .empty-hint {
+      font-size: 14px;
+    }
+    
+    .empty-sub-hint {
+    font-size: 12px;
+    }
+  }
+
+  /* 修改列表容器的底部padding */
+  .dishes-list {
+    padding: 0 0 60px 0; /* 从120px减小到60px */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* 修改meituan-layout的样式确保内容区域正确填充 */
+  .meituan-layout {
+    margin: 0;
+    width: 100%;
+    height: calc(100vh - 140px); /* 从180px减小到140px */
+    overflow: hidden;
+  }
+
+  /* 修改dishes-container的样式 */
+  .dishes-container {
+    padding: 0 6px 6px 6px; /* 从10px减小到6px */
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* 修改下拉框的最大高度 */
+  .filter-group :deep(.el-select-dropdown__wrap) {
+    max-height: 160px !important; /* 减小最大高度 */
+  }
+
+  :deep(.el-select-dropdown) {
+    margin-top: 4px !important;
+    max-height: 200px !important; /* 设置整个下拉菜单的最大高度 */
+  }
+
+  /* 优化下拉选项的样式 */
+  :deep(.el-select-dropdown__item) {
+    height: 32px; /* 减小选项高度 */
+    line-height: 32px;
+    padding: 0 8px;
+  }
+
+  /* 移动端适配 */
+  @media screen and (max-width: 393px) {
+    :deep(.el-select-dropdown__wrap) {
+      max-height: 120px !important; /* 移动端更小的高度 */
+    }
+    
+    :deep(.el-select-dropdown) {
+      margin-top: 2px !important;
+      max-height: 160px !important;
+    }
+    
+    :deep(.el-select-dropdown__item) {
+      height: 28px;
+      line-height: 28px;
+      font-size: 12px;
+    }
+  }
+
+  /* 修改dishes-grid的样式 */
+  .dishes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px; /* 减小卡片间距 */
+    padding: 4px;
+    width: 100%;
+  }
+
+  /* 优化菜品卡片样式 */
+  .dish-card {
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: 1px solid #ebeef5;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .dish-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 调整片样式 */
+  .dish-image {
+    width: 100%;
+    height: 140px; /* 调整图片高度 */
+    object-fit: cover;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: 0;
+  }
+
+  /* 优化卡片内容区域 */
+  .dish-card-content {
+    padding: 8px;
+  }
+
+  .dish-info {
+    padding: 0;
+  }
+
+  /* 优化菜品名称样式 */
+  .dish-name {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    /* 超出两行显示省略号 */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  /* 优化描述文字样式 */
+  .dish-description {
+    font-size: 12px;
+    color: #666;
+    margin: 4px 0;
+    line-height: 1.4;
+    /* 超出一行显示省略号 */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    overflow: hidden;
+  }
+
+  /* 优化标签样式 */
+  .dish-tags {
+    margin: 6px 0;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .dish-tags :deep(.el-tag) {
+    font-size: 10px;
+    padding: 0 4px;
+    height: 18px;
+    line-height: 16px;
+    border-radius: 2px;
+  }
+
+  /* 优化价格和按钮区域 */
+  .dish-footer {
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .price-info {
+    display: flex;
+    align-items: baseline;
+  }
+
+  .price-symbol {
+    font-size: 12px;
+    color: #f56c6c;
+  }
+
+  .price-value {
+    font-size: 18px;
+    font-weight: 500;
+    color: #f56c6c;
+    margin-left: 2px;
+  }
+
+  .add-button {
+    padding: 4px;
+    height: 28px;
+    width: 28px;
+    border-radius: 4px;
+  }
+
+  .add-button :deep(.el-icon) {
+    font-size: 16px;
+  }
+
+  /* 优化窗口信息标签 */
+  .dish-window-info {
+    margin-top: 2px;
+  }
+
+  .dish-window-info :deep(.el-tag) {
+    font-size: 10px;
+    height: 18px;
+    line-height: 16px;
+    padding: 0 4px;
+    background: #f5f7fa;
+    border: none;
+    color: #909399;
+  }
+
+  /* VIVO X80等移动端适配 */
+  @media screen and (max-width: 393px) {
+    .dishes-grid {
+      gap: 4px;
+      padding: 2px;
+    }
+    
+    .dish-card {
+      border-radius: 4px;
+    }
+    
+    .dish-image {
+      height: 120px;
+    }
+    
+    .dish-card-content {
+      padding: 6px;
+    }
+    
+    .dish-name {
+      font-size: 14px;
+    }
+    
+    .dish-description {
+      font-size: 11px;
+      margin: 2px 0;
+    }
+    
+    .dish-tags {
+      margin: 4px 0;
+      gap: 2px;
+    }
+    
+    .price-value {
+      font-size: 16px;
+    }
+    
+    .add-button {
+      height: 24px;
+      width: 24px;
+    }
+    
+    .add-button :deep(.el-icon) {
+      font-size: 14px;
+    }
+  }
+
+  /* 添加加载动画 */
+  .dish-card {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 优化滚动体验 */
+  .dishes-list {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 80px;
+  }
+
+  /* 添加加载占位图样式 */
+  .image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #f5f7fa 25%, #e4e7ed 50%, #f5f7fa 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #909399;
+  }
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* 筛选卡片样式 */
+  .filter-card {
+    margin: 4px 0;
+    border-radius: 6px;
+  }
+
+  .filter-card :deep(.el-card__body) {
+    padding: 8px;
+    display: flex;
+    justify-content: center; /* 让内容居中 */
+  }
+
+  /* 筛选控件容器 */
+  .filter-controls {
+    display: flex;
+    gap: 4px;
+    flex-direction: column;
+    width: 95%; /* 设置宽度为95% */
+    margin: 0 auto; /* 自动边距实现水平居中 */
+  }
+
+  /* 搜索容器和其他子元素也需要调整为100%宽度 */
+  .search-container,
+  .search-input,
+  .filter-group {
+    width: 100%;
+  }
+
+  /* 移动端适配 */
+  @media screen and (max-width: 393px) {
+    .filter-card :deep(.el-card__body) {
+      padding: 6px;
+    }
+    
+    .filter-controls {
+      width: 95%; /* 保持移动端也是95%宽度 */
+    }
+  }
+
+  /* 搜索区域样式 */
+  .search-wrapper {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+  }
+
+  /* 搜索框样式 */
+  .search-filter {
+    flex: 1;
+  }
+
+  .search-filter :deep(.el-input__wrapper) {
+    height: 32px;
+    border-radius: 4px;
+  }
+
+  /* 搜索按钮样式 */
+  .search-button {
+    height: 32px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 13px;
+    border-radius: 4px;
+    margin: 0;
+    min-width: 56px;
+  }
+
+  /* 筛选组样式 */
+  .filter-group {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+  }
+
+  /* 筛选项样式 */
   .filter-group .filter-item {
-    width: calc(50% - 2px) !important;  /* 强制宽度 */
-    min-width: 0 !important;  /* 移除最小宽度限制 */
-    max-width: calc(50% - 2px) !important;  /* 限制最大宽度 */
+    flex: 1;
+    min-width: 0 !important;
+    max-width: calc(50% - 2px);
   }
 
   /* 统一下拉框样式 */
@@ -3650,7 +4244,7 @@ export default {
 
   .filter-group :deep(.el-input__wrapper) {
     height: 32px;
-    padding: 0 24px 0 8px;  /* 调整内边距，为下拉图标留出空间 */
+    padding: 0 24px 0 8px;  /* 调整内边距,为下拉图标留出空间 */
   }
 
   /* 调整下拉框内部样式 */
@@ -3672,430 +4266,145 @@ export default {
   .filter-group :deep(.el-select-dropdown__item) {
     font-size: 12px;
     padding: 0 8px;
-  }
-
-  /* 文字溢出处理 */
-  .filter-group :deep(.el-select .el-input__inner) {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* 重置按钮 */
-  .filter-controls .el-button {
-    margin: 4px 0 0;
-    width: 100%;
     height: 32px;
-    font-size: 12px;
+    line-height: 32px;
   }
 
-  /* 搜索按钮 */
-  .search-button {
-    padding: 0 8px;
-    min-width: 48px;
-  }
-
-  /* 搜索框 */
-  .search-filter :deep(.el-input__wrapper) {
-    padding: 0 8px;
-  }
-}
-
-/* 添加地图切换按钮样式 */
-.map-toggle {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 1001;
-}
-
-.toggle-button {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 修改地图组件样式，添加过渡效果 */
-.map-section {
-  transition: all 0.3s ease;
-  height: 300px;
-  margin-bottom: 10px; /* 从20px减小到10px */
-  border-radius: 6px; /* 从8px减小到6px */
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-/* VIVO X80等移动端适配 */
-@media screen and (max-width: 393px) {
-  .map-toggle {
-    top: 4px;
-    right: 4px;
-  }
-
-  .toggle-button {
-    padding: 4px 8px;
-    font-size: 12px;
-  }
-
-  .toggle-button .el-icon {
-    font-size: 14px;
-  }
-
-  .map-section {
-    height: 200px;
-    margin-bottom: 6px; /* 从10px减小到6px */
-  }
-}
-
-/* 修改空状态容器的样式 */
-.no-window-selected {
-  height: calc(100vh - 140px); /* 从180px减小到140px */
-  text-align: center;
-  padding: 0;
-  background: #fff;
-  border-radius: 8px;
-  margin: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 修改el-empty组件的样式 */
-.no-window-selected :deep(.el-empty) {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-}
-
-/* 调整空状态内容的布局 */
-.empty-state-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 0 15px;
-}
-
-/* VIVO X80等移动端适配 */
-@media screen and (max-width: 393px) {
-  .no-window-selected {
-    height: calc(100vh - 120px); /* 从160px减小到120px */
-  }
-  
-  .dishes-list {
-    padding: 0 0 50px 0; /* 从60px减小到50px */
-  }
-  
-  .dishes-container {
-    padding: 0 4px 4px 4px; /* 从6px减小到4px */
-  }
-  
-  .empty-state-content {
-    padding: 0 10px;
-  }
-  
-  .empty-hint {
-    font-size: 14px;
-  }
-  
-  .empty-sub-hint {
-  font-size: 12px;
-  }
-}
-
-/* 修改列表容器的底部padding */
-.dishes-list {
-  padding: 0 0 60px 0; /* 从120px减小到60px */
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-
-/* 修改meituan-layout的样式确保内容区域正确填充 */
-.meituan-layout {
-  margin: 0;
-  width: 100%;
-  height: calc(100vh - 140px); /* 从180px减小到140px */
-  overflow: hidden;
-}
-
-/* 修改dishes-container的样式 */
-.dishes-container {
-  padding: 0 6px 6px 6px; /* 从10px减小到6px */
-  height: 100%;
-  overflow: hidden;
-}
-
-/* 修改下拉框的最大高度 */
-.filter-group :deep(.el-select-dropdown__wrap) {
-  max-height: 160px !important; /* 减小最大高度 */
-}
-
-:deep(.el-select-dropdown) {
-  margin-top: 4px !important;
-  max-height: 200px !important; /* 设置整个下拉菜单的最大高度 */
-}
-
-/* 优化下拉选项的样式 */
-:deep(.el-select-dropdown__item) {
-  height: 32px; /* 减小选项高度 */
-  line-height: 32px;
-  padding: 0 8px;
-}
-
-/* 移动端适配 */
-@media screen and (max-width: 393px) {
-  :deep(.el-select-dropdown__wrap) {
-    max-height: 120px !important; /* 移动端更小的高度 */
-  }
-  
-  :deep(.el-select-dropdown) {
-    margin-top: 2px !important;
+  /* 限制下拉菜单高度 */
+  .filter-group :deep(.el-select-dropdown__wrap) {
     max-height: 160px !important;
   }
-  
-  :deep(.el-select-dropdown__item) {
-    height: 28px;
-    line-height: 28px;
+
+  :deep(.el-select-dropdown) {
+    margin-top: 4px !important;
+    max-height: 200px !important;
+  }
+
+  /* 重置按钮样式 */
+  .filter-controls .el-button {
+    margin: 0; /* 移除上边距 */
+    width: 100%;
+    height: 34px; /* 修改为34px */
     font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    padding: 0;
   }
-}
 
-/* 修改dishes-grid的样式 */
-.dishes-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px; /* 减小卡片间距 */
-  padding: 4px;
-  width: 100%;
-}
+  /* VIVO X80等移动端适配 */
+  @media screen and (max-width: 393px) {
+    .filter-controls .el-button {
+      height: 34px; /* 保持一致的高度 */
+      font-size: 12px;
+    }
+  }
 
-/* 优化菜品卡片样式 */
-.dish-card {
-  background: #fff;
-  border-radius: 6px;
-  overflow: hidden;
-  transition: all 0.3s;
-  cursor: pointer;
-  border: 1px solid #ebeef5;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.dish-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* 调整���片样式 */
-.dish-image {
-  width: 100%;
-  height: 140px; /* 调整图片高度 */
-  object-fit: cover;
-  border-radius: 4px 4px 0 0;
-  margin-bottom: 0;
-}
-
-/* 优化卡片内容区域 */
-.dish-card-content {
-  padding: 8px;
-}
-
-.dish-info {
-  padding: 0;
-}
-
-/* 优化菜品名称样式 */
-.dish-name {
-  font-size: 15px;
-  font-weight: 500;
-  margin-bottom: 4px;
-  line-height: 1.3;
-  /* 超出两行显示省略号 */
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-}
-
-/* 优化描述文字样式 */
-.dish-description {
-  font-size: 12px;
-  color: #666;
-  margin: 4px 0;
-  line-height: 1.4;
-  /* 超出一行显示省略号 */
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  overflow: hidden;
-}
-
-/* 优化标签样式 */
-.dish-tags {
-  margin: 6px 0;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.dish-tags :deep(.el-tag) {
-  font-size: 10px;
-  padding: 0 4px;
-  height: 18px;
-  line-height: 16px;
-  border-radius: 2px;
-}
-
-/* 优化价格和按钮区域 */
-.dish-footer {
-  margin-top: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.price-info {
-  display: flex;
-  align-items: baseline;
-}
-
-.price-symbol {
-  font-size: 12px;
-  color: #f56c6c;
-}
-
-.price-value {
-  font-size: 18px;
-  font-weight: 500;
-  color: #f56c6c;
-  margin-left: 2px;
-}
-
-.add-button {
-  padding: 4px;
-  height: 28px;
-  width: 28px;
-  border-radius: 4px;
-}
-
-.add-button :deep(.el-icon) {
-  font-size: 16px;
-}
-
-/* 优化窗口信息标签 */
-.dish-window-info {
-  margin-top: 2px;
-}
-
-.dish-window-info :deep(.el-tag) {
-  font-size: 10px;
-  height: 18px;
-  line-height: 16px;
-  padding: 0 4px;
-  background: #f5f7fa;
-  border: none;
-  color: #909399;
-}
-
-/* VIVO X80等移动端适配 */
-@media screen and (max-width: 393px) {
-  .dishes-grid {
+  /* 修改搜索区域样式 */
+  .search-wrapper {
+    display: flex;
     gap: 4px;
-    padding: 2px;
+    width: 100%;
   }
-  
-  .dish-card {
+
+  /* 搜索框样式 - 占80%宽度 */
+  .search-filter {
+    flex: 0.8; /* 修改为固定比例0.8 */
+    min-width: 0; /* 确保可以缩小 */
+  }
+
+  .search-filter :deep(.el-input__wrapper) {
+    height: 32px;
     border-radius: 4px;
   }
-  
-  .dish-image {
-    height: 120px;
-  }
-  
-  .dish-card-content {
-    padding: 6px;
-  }
-  
-  .dish-name {
-    font-size: 14px;
-  }
-  
-  .dish-description {
-    font-size: 11px;
-    margin: 2px 0;
-  }
-  
-  .dish-tags {
-    margin: 4px 0;
-    gap: 2px;
-  }
-  
-  .price-value {
-    font-size: 16px;
-  }
-  
-  .add-button {
-    height: 24px;
-    width: 24px;
-  }
-  
-  .add-button :deep(.el-icon) {
-    font-size: 14px;
-  }
-}
 
-/* 添加加载动画 */
-.dish-card {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  /* 搜索按钮样式 - 占20%宽度 */
+  .search-button {
+    flex: 0.2; /* 修改为固定比例0.2 */
+    height: 32px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 13px;
+    border-radius: 4px;
+    margin: 0;
+    min-width: 0; /* 移除最小宽度限制 */
+    white-space: nowrap; /* 防止文字换行 */
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-/* 优化滚动体验 */
-.dishes-list {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  padding-bottom: 80px;
-}
-
-/* 添加加载占位图样式 */
-.image-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, #f5f7fa 25%, #e4e7ed 50%, #f5f7fa 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #909399;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
+  /* VIVO X80等移动端适配 */
+  @media screen and (max-width: 393px) {
+    .search-wrapper {
+      gap: 4px;
+    }
+    
+    .search-button {
+      padding: 0 4px; /* 减小内边距 */
+      font-size: 12px; /* 减小字体 */
+    }
+    
+    /* 在移动端隐藏搜索按钮文字,只显示图标 */
+    .search-button span {
+      display: none;
+    }
+    
+    .search-button .el-icon {
+      margin: 0;
+    }
   }
-  100% {
-    background-position: -200% 0;
+
+  /* 搜索容器样式 */
+  .search-container {
+    width: 100%;
   }
-}
+
+  /* 搜索输入框样式 */
+  .search-input {
+    width: 100%;
+  }
+
+  /* 统一输入框和按钮高度 */
+  .search-input :deep(.el-input__wrapper) {
+    height: 34px;
+    line-height: 34px;
+  }
+
+  /* 搜索按钮样式 */
+  .search-input :deep(.el-input-group__append) {
+    padding: 0;
+    background-color: var(--el-button-bg-color);
+    border-color: var(--el-button-border-color);
+  }
+
+  .search-input :deep(.el-input-group__append .el-button) {
+    height: 34px;
+    border: none;
+    margin: 0;
+    padding: 8px 15px;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .search-input :deep(.el-input-group__append .el-button:hover) {
+    background-color: var(--el-button-hover-bg-color);
+    border-color: var(--el-button-hover-border-color);
+  }
+
+  /* 移动端适配 */
+  @media screen and (max-width: 393px) {
+    .search-input :deep(.el-input-group__append .el-button) {
+      padding: 8px 12px;
+    }
+    
+    .search-input :deep(.el-input-group__append .el-button span) {
+      display: none;
+    }
+    
+    .search-input :deep(.el-input-group__append .el-button .el-icon) {
+      margin: 0;
+    }
+  }
+
 </style> 

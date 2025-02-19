@@ -1,36 +1,61 @@
 <template>
-  <div class="status-bar"></div>
-  <div class="student-layout">
-    <el-container>
-      <el-header>
-        <div class="header-title">GUET智慧食堂</div>
-      </el-header>
+  <div class="layout-root">
+    <div class="status-bar"></div>
+    <div class="student-layout">
+      <el-container>
+        <el-header>
+          <div class="header-title">GUET智慧食堂</div>
+        </el-header>
 
-      <el-main>
-        <router-view></router-view>
-      </el-main>
+        <el-main>
+          <div 
+            class="touch-container"
+            @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
+            @touchend="handleTouchEnd"
+          >
+            <router-view v-slot="{ Component }">
+              <transition
+                name="page"
+                mode="out-in"
+                @enter="enter"
+                @leave="leave"
+                :css="false"
+              >
+                <keep-alive :include="['DishList', 'OrderList']">
+                  <component 
+                    :is="Component" 
+                    class="page-container"
+                    :style="{ zIndex: transitionDepth }"
+                  />
+                </keep-alive>
+              </transition>
+            </router-view>
+          </div>
+        </el-main>
 
-      <el-footer height="55px" class="footer">
-        <div class="nav-buttons">
-          <div class="nav-button" :class="{ active: isActive('/home') }" @click="navigateTo('/home')">
-            <el-icon><Food /></el-icon>
-            <div class="button-text">首页</div>
+        <el-footer height="55px" class="footer">
+          <div class="nav-buttons">
+            <div class="nav-button" :class="{ active: isActive('/home') }" @click="navigateTo('/home')">
+              <el-icon><Food /></el-icon>
+              <div class="button-text">首页</div>
+            </div>
+            <div class="nav-button" :class="{ active: isActive('/recommendations') }" @click="navigateTo('/recommendations')">
+              <el-icon><ChatSquare /></el-icon>
+              <div class="button-text">推荐广场</div>
+            </div>
+            <div class="nav-button" :class="{ active: isActive('/orders') }" @click="navigateTo('/orders')">
+              <el-icon><List /></el-icon>
+              <div class="button-text">订单</div>
+            </div>
+            <div class="nav-button" :class="{ active: isActive('/profile') }" @click="navigateTo('/profile')">
+              <el-icon><User /></el-icon>
+              <div class="button-text">我的</div>
+            </div>
           </div>
-          <div class="nav-button" :class="{ active: isActive('/recommendations') }" @click="navigateTo('/recommendations')">
-            <el-icon><ChatSquare /></el-icon>
-            <div class="button-text">推荐广场</div>
-          </div>
-          <div class="nav-button" :class="{ active: isActive('/orders') }" @click="navigateTo('/orders')">
-            <el-icon><List /></el-icon>
-            <div class="button-text">订单</div>
-          </div>
-          <div class="nav-button" :class="{ active: isActive('/profile') }" @click="navigateTo('/profile')">
-            <el-icon><User /></el-icon>
-            <div class="button-text">我的</div>
-          </div>
-        </div>
-      </el-footer>
-    </el-container>
+        </el-footer>
+      </el-container>
+    </div>
   </div>
 </template>
 
@@ -39,6 +64,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { provide, ref, onMounted } from 'vue'
 import { Food, List, User, ChatSquare } from '@element-plus/icons-vue'
+import gsap from 'gsap'
 
 export default {
   name: 'StudentLayout',
@@ -52,6 +78,7 @@ export default {
     const router = useRouter()
     const route = useRoute()
     const activeTab = ref(router.currentRoute.value.path)
+    const transitionDepth = ref(0)
     
     // 测试数据 - 食堂状态
     const canteenStatus = ref({
@@ -156,6 +183,99 @@ export default {
       document.documentElement.style.setProperty('--safe-area-inset-bottom', `${safeAreaBottom}px`)
     })
 
+    // 进入动画
+    const enter = (el, done) => {
+      transitionDepth.value += 1
+      
+      gsap.fromTo(el,
+        {
+          opacity: 0,
+          scale: 0.98,
+          x: 40,
+        },
+        {
+          opacity: 1,
+          scale: 1,
+          x: 0,
+          duration: 0.6,
+          ease: 'power3.out',
+          onComplete: done
+        }
+      )
+    }
+
+    // 离开动画
+    const leave = (el, done) => {
+      gsap.to(el,
+        {
+          opacity: 0,
+          scale: 0.98,
+          x: -40,
+          duration: 0.4,
+          ease: 'power3.in',
+          onComplete: done
+        }
+      )
+      
+      transitionDepth.value -= 1
+    }
+
+    // 添加触摸相关的状态
+    const touchStart = ref({ x: 0, y: 0 })
+    const touchEnd = ref({ x: 0, y: 0 })
+    const minSwipeDistance = 50 // 最小滑动距离
+    const maxVerticalDistance = 50 // 最大垂直移动距离
+
+    // 路由页面顺序配置
+    const pageOrder = [
+      '/student/home',
+      '/student/recommendations',
+      '/student/orders',
+      '/student/profile'
+    ]
+
+    // 获取当前页面索引
+    const getCurrentPageIndex = () => {
+      return pageOrder.findIndex(path => route.path === path)
+    }
+
+    // 处理触摸开始
+    const handleTouchStart = (event) => {
+      touchStart.value = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY
+      }
+    }
+
+    // 处理触摸移动
+    const handleTouchMove = (event) => {
+      touchEnd.value = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY
+      }
+    }
+
+    // 处理触摸结束
+    const handleTouchEnd = () => {
+      const deltaX = touchEnd.value.x - touchStart.value.x
+      const deltaY = Math.abs(touchEnd.value.y - touchStart.value.y)
+      const currentIndex = getCurrentPageIndex()
+
+      // 如果垂直移动距离太大，不触发页面切换
+      if (deltaY > maxVerticalDistance) return
+
+      // 检查是否满足最小滑动距离
+      if (Math.abs(deltaX) > minSwipeDistance) {
+        if (deltaX > 0 && currentIndex > 0) {
+          // 向右滑动，切换到上一页
+          router.push(pageOrder[currentIndex - 1])
+        } else if (deltaX < 0 && currentIndex < pageOrder.length - 1) {
+          // 向左滑动，切换到下一页
+          router.push(pageOrder[currentIndex + 1])
+        }
+      }
+    }
+
     return {
       isActive,
       navigateTo,
@@ -164,13 +284,25 @@ export default {
       Food,
       List,
       User,
-      ChatSquare
+      ChatSquare,
+      enter,
+      leave,
+      transitionDepth,
+      handleTouchStart,
+      handleTouchMove,
+      handleTouchEnd
     }
   }
 }
 </script>
 
 <style scoped>
+.layout-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .status-bar {
   height: var(--status-bar-height, 0px);
   width: 100%;
@@ -181,6 +313,8 @@ export default {
   height: calc(100vh - var(--status-bar-height, 0px));
   display: flex;
   flex-direction: column;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
 .el-container {
@@ -213,6 +347,7 @@ export default {
   flex: 1;
   -webkit-overflow-scrolling: touch;
   background-color: #f5f7fa;
+  position: relative;
 }
 
 .footer {
@@ -244,7 +379,8 @@ export default {
   padding: 6px 0;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s ease;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   background-color: transparent;
   border: none;
@@ -252,8 +388,7 @@ export default {
 }
 
 .nav-button:active {
-  opacity: 0.7;
-  transform: scale(0.98);
+  transform: scale(0.95);
 }
 
 .nav-button.active {
@@ -301,5 +436,40 @@ export default {
 .nav-button:active::after {
   transform: translate(-50%, -50%) scale(1);
   opacity: 0.1;
+}
+
+/* 页面容器基础样式 */
+.page-container {
+  width: 100%;
+  height: calc(100vh - 44px - 55px - var(--status-bar-height, 0px) - var(--safe-area-inset-bottom, 0px));
+  contain: content;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+/* 降级备用动画 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(40px) scale(0.98);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateX(-40px) scale(0.98);
+}
+
+.touch-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 </style> 

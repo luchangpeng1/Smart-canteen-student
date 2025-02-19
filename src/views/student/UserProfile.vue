@@ -1,357 +1,363 @@
 <template>
-  <div class="user-profile">
-    <!-- 用户基本信息卡片 -->
-    <div class="user-info-card">
-      <div class="user-info">
-        <el-avatar :size="64" :src="userInfo.avatar">
-          {{ userInfo.name.charAt(0) }}
-        </el-avatar>
-        <div class="info-content">
-          <div class="name-wrapper">
-            <h3>{{ userInfo.name }}</h3>
-            <el-button 
-              class="edit-btn" 
-              type="primary" 
-              link 
-              @click="showEditProfile"
-              :title="'编辑个人信息'"
-            >
-              <el-icon><Edit /></el-icon>
-              <span class="edit-text">编辑资料</span>
-            </el-button>
+  <div class="user-profile-container">
+    <div class="user-profile">
+      <!-- 用户基本信息卡片 -->
+      <div class="user-info-card">
+        <div class="user-info">
+          <el-avatar :size="64" :src="userInfo.avatar">
+            {{ userInfo.name.charAt(0) }}
+          </el-avatar>
+          <div class="info-content">
+            <div class="name-wrapper">
+              <h3>{{ userInfo.name }}</h3>
+              <el-button 
+                class="edit-btn" 
+                type="primary" 
+                link 
+                @click="showEditProfile"
+                :title="'编辑个人信息'"
+              >
+                <el-icon><Edit /></el-icon>
+                <span class="edit-text">编辑资料</span>
+              </el-button>
+            </div>
+            <p>{{ userInfo.studentId }}</p>
           </div>
-          <p>{{ userInfo.studentId }}</p>
+        </div>
+        <div class="balance-info">
+          <div class="balance-item" @click="handleMenuClick('wallet')" style="cursor: pointer">
+            <span class="amount">¥{{ userInfo.balance }}</span>
+            <span class="label">余额</span>
+          </div>
+          <div class="balance-item" @click="navigateToPage('points-history')" style="cursor: pointer">
+            <span class="amount">{{ userInfo.points }}</span>
+            <span class="label">积分</span>
+          </div>
         </div>
       </div>
-      <div class="balance-info">
-        <div class="balance-item" @click="handleMenuClick('wallet')" style="cursor: pointer">
-          <span class="amount">¥{{ userInfo.balance }}</span>
-          <span class="label">余额</span>
-        </div>
-        <div class="balance-item" @click="navigateToPage('points-history')" style="cursor: pointer">
-          <span class="amount">{{ userInfo.points }}</span>
-          <span class="label">积分</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- 功能菜单列表 -->
-    <div class="menu-list">
-      <el-card class="menu-card">
-        <!-- 钱包相关 -->
-        <div class="menu-item" @click="handleMenuClick('wallet')">
-          <div class="menu-icon">
-            <el-icon><WalletFilled /></el-icon>
+      <!-- 功能菜单列表 -->
+      <div class="menu-list">
+        <el-card class="menu-card">
+          <!-- 钱包相关 -->
+          <div class="menu-item" @click="handleMenuClick('wallet')">
+            <div class="menu-icon">
+              <el-icon><WalletFilled /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>我的钱包</span>
+              <span class="menu-value">¥{{ userInfo.balance }}</span>
+            </div>
           </div>
-          <div class="menu-content">
-            <span>我的钱包</span>
-            <span class="menu-value">¥{{ userInfo.balance }}</span>
+          <div class="menu-item" @click="navigateToPage('transactions')">
+            <div class="menu-icon">
+              <el-icon><List /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>消费记录</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
-        </div>
-        <div class="menu-item" @click="navigateToPage('/transactions')">
-          <div class="menu-icon">
-            <el-icon><List /></el-icon>
+          
+          <!-- 订餐相关 -->
+          <div class="menu-item" @click="handleMenuClick('favorites')">
+            <div class="menu-icon">
+              <el-icon><StarFilled /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>我的收藏</span>
+              <span class="menu-value">{{ userInfo.favorites }}个菜品</span>
+            </div>
           </div>
-          <div class="menu-content">
-            <span>消费记录</span>
-            <el-icon><ArrowRight /></el-icon>
+          <div class="menu-item" @click="handleMenuClick('reviews')">
+            <div class="menu-icon">
+              <el-icon><ChatDotSquare /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>历史评价</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
-        </div>
-        
-        <!-- 订餐相关 -->
-        <div class="menu-item" @click="handleMenuClick('favorites')">
-          <div class="menu-icon">
-            <el-icon><StarFilled /></el-icon>
+          
+          <!-- 反馈相关 -->
+          <div class="menu-item" @click="showFeedbackDialog">
+            <div class="menu-icon">
+              <el-icon><EditPen /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>提交建议</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
-          <div class="menu-content">
-            <span>我的收藏</span>
-            <span class="menu-value">{{ userInfo.favorites }}个菜品</span>
+          <div class="menu-item" @click="handleMenuClick('my-feedbacks')">
+            <div class="menu-icon">
+              <el-icon><Message /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>我的建议</span>
+              <span class="menu-value">{{ userInfo.feedbacks }}条</span>
+            </div>
           </div>
-        </div>
-        <div class="menu-item" @click="handleMenuClick('reviews')">
-          <div class="menu-icon">
-            <el-icon><ChatDotSquare /></el-icon>
-          </div>
-          <div class="menu-content">
-            <span>历史评价</span>
-            <el-icon><ArrowRight /></el-icon>
-          </div>
-        </div>
-        
-        <!-- 反馈相关 -->
-        <div class="menu-item" @click="showFeedbackDialog">
-          <div class="menu-icon">
-            <el-icon><EditPen /></el-icon>
-          </div>
-          <div class="menu-content">
-            <span>提交建议</span>
-            <el-icon><ArrowRight /></el-icon>
-          </div>
-        </div>
-        <div class="menu-item" @click="handleMenuClick('my-feedbacks')">
-          <div class="menu-icon">
-            <el-icon><Message /></el-icon>
-          </div>
-          <div class="menu-content">
-            <span>我的建议</span>
-            <span class="menu-value">{{ userInfo.feedbacks }}条</span>
-          </div>
-        </div>
 
-        <!-- 设置相关 -->
-        <div class="menu-item" @click="handleMenuClick('notification-settings')">
-          <div class="menu-icon">
-            <el-icon><Bell /></el-icon>
+          <!-- 设置相关 -->
+          <div class="menu-item" @click="handleMenuClick('notification-settings')">
+            <div class="menu-icon">
+              <el-icon><Bell /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>通知设置</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
-          <div class="menu-content">
-            <span>通知设置</span>
-            <el-icon><ArrowRight /></el-icon>
+          <div class="menu-item" @click="handleMenuClick('preferences')">
+            <div class="menu-icon">
+              <el-icon><Setting /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>偏好设置</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
-        </div>
-        <div class="menu-item" @click="handleMenuClick('preferences')">
-          <div class="menu-icon">
-            <el-icon><Setting /></el-icon>
+          <div class="menu-item" @click="showAbout">
+            <div class="menu-icon">
+              <el-icon><InfoFilled /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>关于我们</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
-          <div class="menu-content">
-            <span>偏好设置</span>
-            <el-icon><ArrowRight /></el-icon>
-          </div>
-        </div>
-        <div class="menu-item" @click="showAbout">
-          <div class="menu-icon">
-            <el-icon><InfoFilled /></el-icon>
-          </div>
-          <div class="menu-content">
-            <span>关于我们</span>
-            <el-icon><ArrowRight /></el-icon>
-          </div>
-        </div>
 
-        <!-- 积分相关 -->
-        <div class="menu-item" @click="handleMenuClick('points')">
-          <div class="menu-icon">
-            <el-icon><Medal /></el-icon>
+          <!-- 积分相关 -->
+          <div class="menu-item" @click="navigateToPage('points-history')">
+            <div class="menu-icon">
+              <el-icon><Histogram /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>积分历史</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
-          <div class="menu-content">
-            <span>我的积分</span>
-            <span class="menu-value">{{ userInfo.points }}分</span>
+          <div class="menu-item" @click="navigateToPage('points-rules')">
+            <div class="menu-icon">
+              <el-icon><Document /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>积分规则</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
           </div>
-        </div>
-        <div class="menu-item" @click="showPointsRules">
-          <div class="menu-icon">
-            <el-icon><Document /></el-icon>
-          </div>
-          <div class="menu-content">
-            <span>积分规则</span>
-            <el-icon><ArrowRight /></el-icon>
-          </div>
-        </div>
-        <div class="menu-item" @click="showPointsExchange">
-          <div class="menu-icon">
-            <el-icon><Present /></el-icon>
-          </div>
-          <div class="menu-content">
-            <span>积分兑换</span>
-            <el-icon><ArrowRight /></el-icon>
-          </div>
-        </div>
-      </el-card>
-
-      <!-- 退出登录按钮 -->
-      <div class="logout-button">
-        <el-button type="danger" plain @click="handleLogout">退出登录</el-button>
-      </div>
-    </div>
-
-    <!-- 充值对话框 -->
-    <el-dialog v-model="rechargeVisible" title="余额充值" width="90%">
-      <div class="recharge-options">
-        <div 
-          v-for="amount in [20, 50, 100, 200]" 
-          :key="amount"
-          class="recharge-option"
-          :class="{ active: rechargeForm.amount === amount }"
-          @click="rechargeForm.amount = amount"
-        >
-          ¥{{ amount }}
-        </div>
-      </div>
-      <el-form :model="rechargeForm" label-width="80px">
-        <el-form-item label="其他金额">
-          <el-input-number v-model="rechargeForm.amount" :min="0" :step="10" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="rechargeVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleRecharge">确认充值</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 反馈对话框 -->
-    <el-dialog v-model="feedbackVisible" title="提交建议" width="90%">
-      <el-form :model="feedbackForm" label-width="80px">
-        <el-form-item label="食堂">
-          <el-select v-model="feedbackForm.canteen" placeholder="请选择食堂">
-            <el-option
-              v-for="canteen in canteens"
-              :key="canteen.id"
-              :label="canteen.name"
-              :value="canteen.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="窗口" v-if="feedbackForm.canteen">
-          <el-select v-model="feedbackForm.window" placeholder="请选择窗口">
-            <el-option
-              v-for="window in getWindows(feedbackForm.canteen)"
-              :key="window.id"
-              :label="window.name"
-              :value="window.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="建议类型">
-          <el-select v-model="feedbackForm.type" placeholder="请选择建议类型">
-            <el-option label="菜品建议" value="dish" />
-            <el-option label="服务建议" value="service" />
-            <el-option label="环境建议" value="environment" />
-            <el-option label="其他建议" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="建议内容">
-          <el-input
-            v-model="feedbackForm.content"
-            type="textarea"
-            :rows="4"
-            placeholder="请详细描述您的建议..."
-          />
-        </el-form-item>
-        <el-form-item label="图片">
-          <el-upload
-            action="#"
-            list-type="picture-card"
-            :auto-upload="false"
-            :on-change="handleImageChange"
-          >
-            <el-icon><Plus /></el-icon>
-          </el-upload>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="feedbackVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitFeedback">提交建议</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 个人信息编辑对话 -->
-    <el-dialog 
-      v-model="profileEditVisible" 
-      title="编辑个人信息" 
-      width="90%"
-      :close-on-click-modal="false"
-    >
-      <el-form 
-        ref="profileFormRef"
-        :model="profileForm" 
-        :rules="profileFormRules"
-        label-width="80px"
-      >
-        <el-form-item label="头像">
-          <el-upload
-            class="avatar-uploader"
-            action="#"
-            :show-file-list="false"
-            :auto-upload="false"
-            :on-change="handleAvatarChange"
-            accept="image/*"
-          >
-            <img 
-              v-if="profileForm.avatar" 
-              :src="profileForm.avatar" 
-              class="avatar" 
-            />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-          </el-upload>
-          <div class="upload-tip">支持 jpg、png 格式，大小不超过 2MB</div>
-        </el-form-item>
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="profileForm.name" maxlength="20" show-word-limit />
-        </el-form-item>
-        <el-form-item label="手机号码" prop="phone">
-          <el-input v-model="profileForm.phone" maxlength="11" />
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="profileForm.email" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="profileEditVisible = false">取消</el-button>
-        <el-button 
-          type="primary" 
-          @click="updateProfile"
-          :loading="isUpdatingProfile"
-        >
-          保存
-        </el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 积分规则对话框 -->
-    <el-dialog v-model="pointsRulesVisible" title="积分规则" width="90%">
-      <div class="points-rules">
-        <h4>获取积分</h4>
-        <ul>
-          <li>完成订单：<span class="points-value">+2分</span></li>
-          <li>评价订单：<span class="points-value">+3分</span></li>
-          <li>首次使用：<span class="points-value">+10分</span></li>
-          <li>每日签到：<span class="points-value">+1分</span></li>
-        </ul>
-        <h4>积分等级</h4>
-        <ul>
-          <li>普通会员：0-100分</li>
-          <li>白银会员：101-500分</li>
-          <li>黄金会员：501-1000分</li>
-          <li>钻石会员：1000分以上</li>
-        </ul>
-        <h4>会员特权</h4>
-        <ul>
-          <li>白银会员：订单享95折</li>
-          <li>黄金会员：订单享9折</li>
-          <li>钻石会员：订单享85折</li>
-        </ul>
-      </div>
-    </el-dialog>
-
-    <!-- 积分兑换对话框 -->
-    <el-dialog v-model="pointsExchangeVisible" title="积分兑换" width="90%">
-      <div class="exchange-list">
-        <el-card v-for="item in exchangeItems" :key="item.id" class="exchange-item">
-          <div class="exchange-content">
-            <img :src="item.image" :alt="item.name" class="exchange-image">
-            <div class="exchange-info">
-              <h3>{{ item.name }}</h3>
-              <p>{{ item.description }}</p>
-              <div class="exchange-points">
-                需要 <span class="points-value">{{ item.points }}</span> 积分
+          <div class="menu-item" @click="navigateToPage('points-exchange')">
+            <div class="menu-icon">
+              <el-icon><Present /></el-icon>
+            </div>
+            <div class="menu-content">
+              <span>积分兑换</span>
+              <div class="menu-value">
+                <span class="points">{{ userInfo.points }}</span> 积分可用
+                <el-icon><ArrowRight /></el-icon>
               </div>
             </div>
           </div>
+        </el-card>
+
+        <!-- 退出登录按钮 -->
+        <div class="logout-button">
+          <el-button type="danger" plain @click="handleLogout">退出登录</el-button>
+        </div>
+      </div>
+
+      <!-- 充值对话框 -->
+      <el-dialog v-model="rechargeVisible" title="余额充值" width="90%">
+        <div class="recharge-options">
+          <div 
+            v-for="amount in [20, 50, 100, 200]" 
+            :key="amount"
+            class="recharge-option"
+            :class="{ active: rechargeForm.amount === amount }"
+            @click="rechargeForm.amount = amount"
+          >
+            ¥{{ amount }}
+          </div>
+        </div>
+        <el-form :model="rechargeForm" label-width="80px">
+          <el-form-item label="其他金额">
+            <el-input-number v-model="rechargeForm.amount" :min="0" :step="10" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="rechargeVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleRecharge">确认充值</el-button>
+        </template>
+      </el-dialog>
+
+      <!-- 反馈对话框 -->
+      <el-dialog v-model="feedbackVisible" title="提交建议" width="90%">
+        <el-form :model="feedbackForm" label-width="80px">
+          <el-form-item label="食堂">
+            <el-select v-model="feedbackForm.canteen" placeholder="请选择食堂">
+              <el-option
+                v-for="canteen in canteens"
+                :key="canteen.id"
+                :label="canteen.name"
+                :value="canteen.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="窗口" v-if="feedbackForm.canteen">
+            <el-select v-model="feedbackForm.window" placeholder="请选择窗口">
+              <el-option
+                v-for="window in getWindows(feedbackForm.canteen)"
+                :key="window.id"
+                :label="window.name"
+                :value="window.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="建议类型">
+            <el-select v-model="feedbackForm.type" placeholder="请选择建议类型">
+              <el-option label="菜品建议" value="dish" />
+              <el-option label="服务建议" value="service" />
+              <el-option label="环境建议" value="environment" />
+              <el-option label="其他建议" value="other" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="建议内容">
+            <el-input
+              v-model="feedbackForm.content"
+              type="textarea"
+              :rows="4"
+              placeholder="请详细描述您的建议..."
+            />
+          </el-form-item>
+          <el-form-item label="图片">
+            <el-upload
+              action="#"
+              list-type="picture-card"
+              :auto-upload="false"
+              :on-change="handleImageChange"
+            >
+              <el-icon><Plus /></el-icon>
+            </el-upload>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="feedbackVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitFeedback">提交建议</el-button>
+        </template>
+      </el-dialog>
+
+      <!-- 个人信息编辑对话 -->
+      <el-dialog 
+        v-model="profileEditVisible" 
+        title="编辑个人信息" 
+        width="90%"
+        :close-on-click-modal="false"
+      >
+        <el-form 
+          ref="profileFormRef"
+          :model="profileForm" 
+          :rules="profileFormRules"
+          label-width="80px"
+        >
+          <el-form-item label="头像">
+            <el-upload
+              class="avatar-uploader"
+              action="#"
+              :show-file-list="false"
+              :auto-upload="false"
+              :on-change="handleAvatarChange"
+              accept="image/*"
+            >
+              <img 
+                v-if="profileForm.avatar" 
+                :src="profileForm.avatar" 
+                class="avatar" 
+              />
+              <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+            </el-upload>
+            <div class="upload-tip">支持 jpg、png 格式，大小不超过 2MB</div>
+          </el-form-item>
+          <el-form-item label="姓名" prop="name">
+            <el-input v-model="profileForm.name" maxlength="20" show-word-limit />
+          </el-form-item>
+          <el-form-item label="手机号码" prop="phone">
+            <el-input v-model="profileForm.phone" maxlength="11" />
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="profileForm.email" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="profileEditVisible = false">取消</el-button>
           <el-button 
             type="primary" 
-            @click="handleExchange(item)"
-            :disabled="userInfo.points < item.points"
+            @click="updateProfile"
+            :loading="isUpdatingProfile"
           >
-            立即兑换
+            保存
           </el-button>
-        </el-card>
-      </div>
-    </el-dialog>
+        </template>
+      </el-dialog>
+
+      <!-- 积分规则对话框 -->
+      <el-dialog v-model="pointsRulesVisible" title="积分规则" width="90%">
+        <div class="points-rules">
+          <h4>获取积分</h4>
+          <ul>
+            <li>完成订单：<span class="points-value">+2分</span></li>
+            <li>评价订单：<span class="points-value">+3分</span></li>
+            <li>首次使用：<span class="points-value">+10分</span></li>
+            <li>每日签到：<span class="points-value">+1分</span></li>
+          </ul>
+          <h4>积分等级</h4>
+          <ul>
+            <li>普通会员：0-100分</li>
+            <li>白银会员：101-500分</li>
+            <li>黄金会员：501-1000分</li>
+            <li>钻石会员：1000分以上</li>
+          </ul>
+          <h4>会员特权</h4>
+          <ul>
+            <li>白银会员：订单享95折</li>
+            <li>黄金会员：订单享9折</li>
+            <li>钻石会员：订单享85折</li>
+          </ul>
+        </div>
+      </el-dialog>
+
+      <!-- 积分兑换对话框 -->
+      <el-dialog v-model="pointsExchangeVisible" title="积分兑换" width="90%">
+        <div class="exchange-list">
+          <el-card v-for="item in exchangeItems" :key="item.id" class="exchange-item">
+            <div class="exchange-content">
+              <img :src="item.image" :alt="item.name" class="exchange-image">
+              <div class="exchange-info">
+                <h3>{{ item.name }}</h3>
+                <p>{{ item.description }}</p>
+                <div class="exchange-points">
+                  需要 <span class="points-value">{{ item.points }}</span> 积分
+                </div>
+              </div>
+            </div>
+            <el-button 
+              type="primary" 
+              @click="handleExchange(item)"
+              :disabled="userInfo.points < item.points"
+            >
+              立即兑换
+            </el-button>
+          </el-card>
+        </div>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   WalletFilled,
   List,
@@ -368,9 +374,9 @@ import {
   Edit,
   Medal,
   Document,
+  Histogram,
   Present
 } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { useStore } from 'vuex'
 import { computed } from 'vue'
 
@@ -392,12 +398,56 @@ export default {
     Edit,
     Medal,
     Document,
+    Histogram,
     Present
   },
   setup() {
     const router = useRouter()
     const store = useStore()
-    const userInfo = computed(() => store.getters['user/userInfo'])
+
+    // 修改 userInfo 的获取方式，添加错误处理和默认值
+    const userInfo = computed(() => {
+      try {
+        return store?.getters?.['user/userInfo'] || {
+          name: '',
+          studentId: '',
+          avatar: '',
+          balance: 0,
+          points: 0,
+          favorites: 0,
+          feedbacks: 0,
+          phone: '',
+          email: ''
+        }
+      } catch (error) {
+        console.error('Failed to get user info:', error)
+        return {
+          name: '',
+          studentId: '',
+          avatar: '',
+          balance: 0,
+          points: 0,
+          favorites: 0,
+          feedbacks: 0,
+          phone: '',
+          email: ''
+        }
+      }
+    })
+
+    // 添加错误处理的 store dispatch 包装函数
+    const safeDispatch = async (action, payload) => {
+      try {
+        if (!store) {
+          throw new Error('Store is not initialized')
+        }
+        return await store.dispatch(action, payload)
+      } catch (error) {
+        console.error(`Failed to dispatch ${action}:`, error)
+        ElMessage.error('操作失败，请重试')
+        throw error
+      }
+    }
 
     // 充值相关
     const rechargeVisible = ref(false)
@@ -435,15 +485,20 @@ export default {
       rechargeVisible.value = true
     }
 
-    const handleRecharge = () => {
+    // 修改使用 store 的函数
+    const handleRecharge = async () => {
       if (!rechargeForm.value.amount || rechargeForm.value.amount <= 0) {
         ElMessage.warning('请输入有效的充值金额')
         return
       }
       
-      store.dispatch('user/updateBalance', userInfo.value.balance + rechargeForm.value.amount)
-      ElMessage.success(`成功充值 ${rechargeForm.value.amount} 元`)
-      rechargeVisible.value = false
+      try {
+        await safeDispatch('user/updateBalance', userInfo.value.balance + rechargeForm.value.amount)
+        ElMessage.success(`成功充值 ${rechargeForm.value.amount} 元`)
+        rechargeVisible.value = false
+      } catch (error) {
+        // 错误已在 safeDispatch 中处理
+      }
     }
 
     const showFeedbackDialog = () => {
@@ -484,22 +539,52 @@ export default {
       })
     }
 
-    const handleLogout = () => {
-      localStorage.removeItem('user')
-      ElMessage.success('已退出登录')
-      router.push('/login')
+    const handleLogout = async () => {
+      try {
+        await ElMessageBox.confirm(
+          '确定要退出登录吗？',
+          '提示',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        )
+
+        await safeDispatch('user/logout')
+        
+        ElMessage.success('已退出登录')
+        
+        // 使用 replace 而不是 push，避免返回到登出前的页面
+        router.replace({
+          path: '/login',
+          query: { t: Date.now() }
+        })
+
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('退出登录失败:', error)
+          ElMessage.error('退出失败，请重试')
+        }
+      }
     }
 
     const navigateToPage = (path) => {
       try {
-        // 确保路径以 /student 开头
-        if (!path.startsWith('/student/')) {
-          path = '/student/' + path.replace(/^\//, '')
-        }
-        console.log('Navigating to:', path) // 添加日志
-        router.push(path)
+        // 确保路径格式正确
+        const fullPath = path.startsWith('/') 
+          ? path 
+          : `/student/${path}`
+        
+        console.log('Navigating to:', fullPath) // 添加日志
+        router.push(fullPath).catch(err => {
+          if (err.name !== 'NavigationDuplicated') {
+            console.error('Navigation error:', err)
+            ElMessage.error('页面跳转失败')
+          }
+        })
       } catch (error) {
-        console.error('Navigation error:', error) // 添加错误日志
+        console.error('Navigation setup error:', error)
         ElMessage.error('页面跳转失败')
       }
     }
@@ -600,9 +685,8 @@ export default {
         await profileFormRef.value.validate()
         
         isUpdatingProfile.value = true
-        // 合并现有用户信息和更新的个人资料
-        await store.dispatch('user/updateUserInfo', {
-          ...userInfo.value, // 保留原有信息
+        await safeDispatch('user/updateUserInfo', {
+          ...userInfo.value,
           avatar: profileForm.value.avatar,
           name: profileForm.value.name,
           phone: profileForm.value.phone,
@@ -612,8 +696,10 @@ export default {
         ElMessage.success('个人信息更新成功')
         profileEditVisible.value = false
       } catch (error) {
-        console.error('更新个人信息失败:', error)
-        ElMessage.error('更新失败，请重试')
+        if (error.message !== 'validation failed') {
+          console.error('更新个人信息失败:', error)
+          ElMessage.error('更新失败，请重试')
+        }
       } finally {
         isUpdatingProfile.value = false
       }
@@ -655,13 +741,13 @@ export default {
 
     const handleExchange = async (item) => {
       try {
-        await store.dispatch('user/exchangePoints', {
+        await safeDispatch('user/exchangePoints', {
           itemId: item.id,
           points: item.points
         })
         ElMessage.success('兑换成功')
       } catch (error) {
-        ElMessage.error('兑换失败，请重试')
+        // 错误已在 safeDispatch 中处理
       }
     }
 
@@ -702,6 +788,12 @@ export default {
 </script>
 
 <style scoped>
+.user-profile-container {
+  width: 100%;
+  min-height: 100%;
+  background-color: #f5f7fa;
+}
+
 .user-profile {
   padding: 12px 8px;
 }
@@ -841,7 +933,6 @@ export default {
   color: #409EFF;
 }
 
-
 .menu-value {
   color: #909399;
   font-size: 14px;
@@ -919,14 +1010,6 @@ export default {
   border-color: var(--el-color-primary);
 }
 
-.avatar-uploader :deep(.el-upload:hover) {
-  border-color: var(--el-color-primary);
-}
-
-.avatar-uploader :deep(.el-upload:hover) {
-  border-color: var(--el-color-primary);
-}
-
 .points-rules {
   padding: 0 12px;
 }
@@ -993,5 +1076,19 @@ export default {
   opacity: 0.8;
   transform: scale(1.02);
   transition: all 0.3s ease;
+}
+
+.points {
+  color: var(--el-color-primary);
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.menu-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #909399;
+  font-size: 14px;
 }
 </style> 
