@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # 或者是你的默认分支名称
+      - main # 或者是你的默认分支名称，如 master
 
 jobs:
   build-and-deploy:
@@ -28,4 +28,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist # 构建输出目录
-          branch: gh-pages # 部署分支 
+          branch: gh-pages # 部署到的分支 
