@@ -139,7 +139,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory('/Smart-canteen-student/'),
   routes
 })
 

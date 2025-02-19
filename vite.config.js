@@ -5,7 +5,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [vue()],
-  base: './',  // 重要：使用相对路径
+  base: '/Smart-canteen-student/',  // 修改为你的仓库名
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
