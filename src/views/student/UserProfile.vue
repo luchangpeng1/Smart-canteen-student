@@ -124,8 +124,8 @@
       </div>
     </div>
 
-    <div class="feature-section">
-      <div class="section-title">操作</div>
+    <div class="feature-section" style="margin-top: -20px;">
+      <div class="section-title" >操作</div>
       <div class="feature-list">
         <div class="list-item" @click="navigateTo('/student/change-password')">
           <div class="item-left">
@@ -148,8 +148,8 @@
           </div>
           <el-icon class="arrow-icon"><ArrowRight /></el-icon>
         </div>
+        <el-button type="danger" @click="handleLogout">退出登录</el-button>
       </div>
-      <el-button type="danger" @click="handleLogout">退出登录</el-button>
     </div>
 
     <el-dialog v-model="profileEditVisible" title="编辑个人信息" width="90%" :close-on-click-modal="false">
@@ -674,6 +674,7 @@ export default {
   min-height: 100vh;
   background: #f8f9fa;
   padding: 16px;
+  padding-bottom: 50px;
 }
 
 .profile-header {
