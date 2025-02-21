@@ -5,7 +5,18 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [vue()],
-  base: '/Smart-canteen-student/',  // 修改为你的仓库名
+  base: '/',  // 修改为根路径
+  server: {
+    port: 5176,
+    host: '0.0.0.0',
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

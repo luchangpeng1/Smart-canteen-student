@@ -44,6 +44,10 @@
               <el-icon><ChatSquare /></el-icon>
               <div class="button-text">推荐广场</div>
             </div>
+            <div class="nav-button" :class="{ active: isActive('/ai-chat') }" @click="navigateTo('/ai-chat')">
+              <el-icon><ChatDotRound /></el-icon>
+              <div class="button-text">AI助手</div>
+            </div>
             <div class="nav-button" :class="{ active: isActive('/orders') }" @click="navigateTo('/orders')">
               <el-icon><List /></el-icon>
               <div class="button-text">订单</div>
@@ -63,7 +67,7 @@
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { provide, ref, onMounted } from 'vue'
-import { Food, List, User, ChatSquare } from '@element-plus/icons-vue'
+import { Food, List, User, ChatSquare, ChatDotRound } from '@element-plus/icons-vue'
 import gsap from 'gsap'
 
 export default {
@@ -72,7 +76,8 @@ export default {
     Food,
     List,
     User,
-    ChatSquare
+    ChatSquare,
+    ChatDotRound
   },
   setup() {
     const router = useRouter()
@@ -230,6 +235,7 @@ export default {
     const pageOrder = [
       '/student/home',
       '/student/recommendations',
+      '/student/ai-chat',
       '/student/orders',
       '/student/profile'
     ]
@@ -285,6 +291,7 @@ export default {
       List,
       User,
       ChatSquare,
+      ChatDotRound,
       enter,
       leave,
       transitionDepth,

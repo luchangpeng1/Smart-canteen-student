@@ -82,6 +82,12 @@ const routes = [
         component: () => import('@/views/student/RecommendationSquare.vue')
       },
       {
+        path: 'ai-chat',
+        name: 'AIChat',
+        component: () => import('@/views/student/AIChat.vue'),
+        meta: { title: 'AI 智能助手' }
+      },
+      {
         path: '/student/canteen/:canteen/floor/:floor',
         name: 'FloorDetail',
         component: FloorDetail
@@ -139,7 +145,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory('/Smart-canteen-student/'),
+  history: createWebHistory('/'),
   routes
 })
 
