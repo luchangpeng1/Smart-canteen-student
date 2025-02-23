@@ -287,6 +287,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, CaretTop, ChatDotRound, Share, Plus, CircleCheckFilled, WarningFilled } from '@element-plus/icons-vue'
 import BackHeader from '@/components/BackHeader.vue'
+import { useRouter } from 'vue-router'
 
 const RecommendationSquare = {
   name: 'RecommendationSquare',
@@ -301,6 +302,7 @@ const RecommendationSquare = {
     BackHeader
   },
   setup() {
+    const router = useRouter()
     // 基础状态
     const posts = ref([])
     const postDialogVisible = ref(false)
@@ -463,7 +465,7 @@ const RecommendationSquare = {
 
     // 显示评论
     const showComments = (post) => {
-      post.showComments = !post.showComments
+      router.push(`/student/post/${post.id}`)
     }
 
     // 提交评论
@@ -609,27 +611,71 @@ export default RecommendationSquare
 
 <style scoped>
 .recommendation-square {
-  padding: 8px 6px;
+  padding: 16px;
+  background: #f5f7fa;
+  min-height: 100vh;
 }
 
 .post-action {
-  margin-bottom: 12px;
-  padding: 0 2px;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+
+.post-action .el-button {
+  width: 100%;
+  height: 44px;
+  border-radius: 22px;
+  font-size: 16px;
+  font-weight: 500;
+  background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
+  border: none;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.post-action .el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.3);
+}
+
+.filter-bar {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.filter-item {
+  min-width: 120px;
+  flex: 1;
 }
 
 .post-card {
-  margin-bottom: 8px;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  border: none;
 }
 
 .post-card:hover {
-  transform: none;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .post-header {
-  margin-bottom: 12px;
-  padding: 8px;
+  margin-bottom: 16px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f2f5;
 }
 
 .user-info {
@@ -641,82 +687,116 @@ export default RecommendationSquare
 .user-detail {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .username {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 15px;
+  color: #2c3e50;
 }
 
 .post-time {
-  font-size: 12px;
+  font-size: 13px;
   color: #909399;
 }
 
 .post-content {
-  margin-bottom: 12px;
-  padding: 0 8px;
+  padding: 0 16px 16px;
 }
 
 .post-title {
-  margin: 0 0 8px;
-  font-size: 16px;
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.4;
 }
 
 .location-info {
-  margin-bottom: 8px;
-  gap: 6px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.location-info .el-tag {
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 500;
 }
 
 .post-text {
-  margin: 0 0 12px;
-  line-height: 1.6;
+  margin: 0 0 16px;
+  line-height: 1.8;
+  color: #4a5568;
+  font-size: 15px;
 }
 
 .post-images {
-  gap: 4px;
-  padding: 0 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 0 16px 16px;
 }
 
 .post-image {
-  width: calc(33.33% - 4px);
-  height: 100px;
-  border-radius: 4px;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.post-image:hover {
+  transform: scale(1.02);
 }
 
 .post-actions {
-  padding: 8px;
-  border-top: 1px solid #f0f0f0;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #f0f2f5;
+  background: #fafafa;
 }
 
 .action-item {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
   cursor: pointer;
   color: #606266;
-  font-size: 13px;
+  font-size: 14px;
+  transition: all 0.3s ease;
 }
 
 .action-item:hover {
-  color: #409EFF;
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 
 .action-item .active {
-  color: #409EFF;
+  color: var(--el-color-primary);
 }
 
 .comments-section {
-  background: #fafafa;
-  border-radius: 4px;
-  padding: 12px 8px;
-  margin-top: 12px;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px 16px;
+  margin: 16px;
 }
 
 .comment-item {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding: 8px;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .comment-content {
@@ -724,20 +804,26 @@ export default RecommendationSquare
 }
 
 .comment-user {
-  font-weight: 500;
-  margin-bottom: 4px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #2c3e50;
+}
+
+.comment-text {
+  line-height: 1.6;
+  color: #4a5568;
 }
 
 .comment-time {
   font-size: 12px;
   color: #909399;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .comment-input {
-  margin-top: 12px;
+  margin-top: 16px;
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: flex-start;
 }
 
@@ -745,234 +831,183 @@ export default RecommendationSquare
   flex: 1;
 }
 
-/* 添加新的样式 */
-.filter-bar {
-  margin-bottom: 12px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 0 2px;
+.comment-input .el-button {
+  border-radius: 8px;
+  padding: 12px 24px;
 }
 
-.filter-item {
-  min-width: 0;
-  flex: 1;
-}
-
-.image-grid {
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.image-grid.single-image {
-  padding: 0 8px;
-}
-
-.image-grid.two-images {
-  padding: 0 8px;
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.image-grid.three-images {
-  padding: 0 8px;
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.image-grid.four-images {
-  padding: 0 8px;
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.image-item {
-  aspect-ratio: 1;
+/* 发布对话框样式优化 */
+.post-dialog :deep(.el-dialog) {
+  border-radius: 20px;
   overflow: hidden;
-  border-radius: 8px;
-  cursor: pointer;
 }
 
-.image-item .el-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-
-.image-item:hover .el-image {
-  transform: scale(1.05);
-}
-
-.post-tags {
-  margin-bottom: 12px;
-  display: flex;
-  gap: 8px;
-}
-
-/* 美化帖子卡片 */
-.post-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
-}
-
-.post-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* 优化评论区样式 */
-.comments-section {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 16px;
-}
-
-.comment-item {
-  background: white;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
-
-/* 添加动画效果 */
-.post-actions .action-item {
-  transition: all 0.3s;
-}
-
-.post-actions .action-item:hover {
-  transform: scale(1.1);
-}
-
-/* 发布对话框样式 */
 .post-type-selector {
   display: flex;
-  gap: 16px;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 .type-item {
   flex: 1;
-  padding: 16px;
-  border: 2px solid #dcdfe6;
-  border-radius: 8px;
+  padding: 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
   cursor: pointer;
   text-align: center;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  background: white;
 }
 
 .type-item.active {
   border-color: var(--el-color-primary);
-  color: var(--el-color-primary);
   background: var(--el-color-primary-light-9);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
 }
 
 .type-item .el-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: #4a5568;
+}
+
+.type-item.active .el-icon {
+  color: var(--el-color-primary);
 }
 
 .type-item span {
   display: block;
   font-size: 16px;
-  margin-bottom: 4px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #2c3e50;
 }
 
 .type-item small {
   display: block;
-  font-size: 12px;
-  color: #909399;
-}
-
-.upload-text {
-  font-size: 12px;
-  color: #909399;
-  text-align: center;
-  margin-top: 8px;
+  font-size: 13px;
+  color: #64748b;
 }
 
 .post-preview {
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  padding: 16px;
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 24px;
 }
 
 .preview-header {
-  font-size: 14px;
-  color: #909399;
+  font-size: 15px;
+  font-weight: 600;
+  color: #64748b;
   margin-bottom: 16px;
+  text-align: center;
+}
+
+.preview-content {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .preview-tags {
   margin: 12px 0;
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .preview-text {
-  color: #606266;
-  line-height: 1.6;
+  color: #4a5568;
+  line-height: 1.8;
 }
 
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-/* VIVO X80适配 */
+/* 移动端适配 */
 @media screen and (max-width: 393px) {
   .recommendation-square {
-    padding: 6px 4px;
+    padding: 12px 8px;
   }
-  
-  .post-card {
-    margin-bottom: 6px;
-  }
-  
-  .post-header {
-    padding: 6px;
-  }
-  
-  .post-content {
-    padding: 0 6px;
-  }
-  
-  .post-title {
+
+  .post-action .el-button {
+    height: 40px;
     font-size: 15px;
   }
-  
-  .post-images {
-    padding: 0 6px;
-  }
-  
-  .post-image {
-    height: 90px;
-  }
-  
-  .location-info :deep(.el-tag) {
-    font-size: 10px;
-    padding: 0 4px;
-    height: 18px;
-    line-height: 16px;
-  }
-  
-  .user-info {
+
+  .filter-bar {
+    padding: 8px;
     gap: 8px;
   }
-  
+
+  .filter-item {
+    min-width: 100px;
+  }
+
+  .post-card {
+    margin-bottom: 12px;
+    border-radius: 12px;
+  }
+
+  .post-header {
+    padding: 12px;
+  }
+
   .username {
-    font-size: 13px;
+    font-size: 14px;
   }
-  
+
   .post-time {
-    font-size: 11px;
+    font-size: 12px;
   }
-  
+
+  .post-title {
+    font-size: 16px;
+  }
+
   .post-text {
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.6;
   }
-  
+
+  .location-info .el-tag {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .post-images {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 6px;
+  }
+
   .action-item {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .comments-section {
+    padding: 16px 12px;
+    margin: 12px;
+  }
+
+  .comment-item {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .type-item {
+    padding: 16px;
+  }
+
+  .type-item .el-icon {
+    font-size: 28px;
+  }
+
+  .type-item span {
+    font-size: 15px;
+  }
+
+  .type-item small {
     font-size: 12px;
   }
 }

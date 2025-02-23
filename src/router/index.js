@@ -79,7 +79,8 @@ const routes = [
       {
         path: 'recommendations',
         name: 'RecommendationSquare',
-        component: () => import('@/views/student/RecommendationSquare.vue')
+        component: () => import('@/views/student/RecommendationSquare.vue'),
+        meta: { title: '推荐广场' }
       },
       {
         path: 'ai-chat',
@@ -138,6 +139,38 @@ const routes = [
           requiresAuth: true,
           role: 'student'
         }
+      },
+      {
+        path: 'change-password',
+        name: 'ChangePassword',
+        component: () => import('../views/student/个人主页相关页面/ChangePassword.vue')
+      },
+      {
+        path: 'bind-wechat',
+        name: 'BindWeChat',
+        component: () => import('../views/student/个人主页相关页面/BindWeChat.vue')
+      },
+      {
+        path: 'bind-phone',
+        name: 'BindPhone',
+        component: () => import('../views/student/个人主页相关页面/BindPhone.vue')
+      },
+      {
+        path: 'about-us',
+        name: 'AboutUs',
+        component: () => import('../views/student/个人主页相关页面/AboutUs.vue')
+      },
+      {
+        path: 'submit-feedback',
+        name: 'SubmitFeedback',
+        component: () => import('../views/student/个人主页相关页面/SubmitFeedback.vue'),
+        meta: { title: '提交建议' }
+      },
+      {
+        path: 'post/:id',
+        name: 'PostDetail',
+        component: () => import('@/views/student/PostDetail.vue'),
+        meta: { title: '帖子详情' }
       }
     ]
   },

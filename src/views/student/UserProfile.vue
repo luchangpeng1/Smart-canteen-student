@@ -53,7 +53,7 @@
     <div class="feature-section">
       <div class="section-title">反馈与建议</div>
       <div class="feature-list">
-        <div class="list-item" @click="navigateTo('/student/feedback-list')">
+        <div class="list-item" @click="navigateTo('/student/submit-feedback')">
           <div class="item-left">
             <el-icon><EditPen /></el-icon>
             <span>提交建议</span>
@@ -93,7 +93,7 @@
     <div class="feature-section">
       <div class="section-title">信息与积分</div>
       <div class="feature-list">
-        <div class="list-item" @click="handleMenuClick('PointsHistory')">
+        <div class="list-item" @click="navigateTo('/student/about-us')">
           <div class="item-left">
             <el-icon><InfoFilled /></el-icon>
             <span>关于我们</span>
@@ -125,7 +125,7 @@
     </div>
 
     <div class="feature-section" style="margin-top: -20px;">
-      <div class="section-title" >操作</div>
+      <div class="section-title" >账号管理</div>
       <div class="feature-list">
         <div class="list-item" @click="navigateTo('/student/change-password')">
           <div class="item-left">
@@ -152,7 +152,7 @@
       </div>
     </div>
 
-    <el-dialog v-model="profileEditVisible" title="编辑个人信息" width="90%" :close-on-click-modal="false">
+    <el-dialog v-model="profileEditVisible" title="编辑个人信息" width="90%" :close-on-click-modal="false" @closed="cleanupAvatarUrl">
       <el-form ref="profileFormRef" :model="profileForm" :rules="profileFormRules" label-width="80px">
         <el-form-item label="头像">
           <el-upload class="avatar-uploader" action="#" :show-file-list="false" :auto-upload="false" :on-change="handleAvatarChange" accept="image/*">
@@ -426,16 +426,6 @@ export default {
     const profileFormRef = ref(null)
     const isUpdatingProfile = ref(false)
 
-    const showEditProfile = () => {
-      profileForm.value = {
-        avatar: userInfo.value.avatar,
-        name: userInfo.value.name,
-        phone: userInfo.value.phone || '',
-        email: userInfo.value.email || ''
-      }
-      profileEditVisible.value = true
-    }
-
     const handleAvatarChange = (file) => {
       // 验证文件类型和大小
       const isImage = file.raw.type.startsWith('image/')
@@ -450,9 +440,39 @@ export default {
         return
       }
 
-      // 创建临时URL预览
+      // 如果已存在预览URL，先释放它
+      if (profileForm.value.avatar && profileForm.value.avatar.startsWith('blob:')) {
+        URL.revokeObjectURL(profileForm.value.avatar)
+      }
+
+      // 创建新的临时URL预览
       profileForm.value.avatar = URL.createObjectURL(file.raw)
     }
+
+    // 添加清理函数
+    const cleanupAvatarUrl = () => {
+      if (profileForm.value.avatar && profileForm.value.avatar.startsWith('blob:')) {
+        URL.revokeObjectURL(profileForm.value.avatar)
+      }
+    }
+
+    const showEditProfile = () => {
+      // 清理之前的blob URL（如果存在）
+      cleanupAvatarUrl()
+      
+      profileForm.value = {
+        avatar: userInfo.value.avatar,
+        name: userInfo.value.name,
+        phone: userInfo.value.phone || '',
+        email: userInfo.value.email || ''
+      }
+      profileEditVisible.value = true
+    }
+
+    // 在组件卸载时清理URL
+    onUnmounted(() => {
+      cleanupAvatarUrl()
+    })
 
     const updateProfile = async () => {
       if (!profileFormRef.value) return
@@ -471,6 +491,7 @@ export default {
         
         ElMessage.success('个人信息更新成功')
         profileEditVisible.value = false
+        cleanupAvatarUrl() // 更新成功后清理URL
       } catch (error) {
         if (error.message !== 'validation failed') {
           console.error('更新个人信息失败:', error)
@@ -595,7 +616,8 @@ export default {
       showPointsExchange,
       handleExchange,
       menuItems,
-      otherServiceItems
+      otherServiceItems,
+      cleanupAvatarUrl
     }
   }
 }

@@ -412,12 +412,12 @@ const batchCheckout = () => {
 
 <style scoped>
 .cart-page {
-  padding: 6px;
-  max-width: 100%;
+  padding: 0;
+  max-width: 800px;
   margin: 0 auto;
-  background-color: #f5f7fa;
-  min-height: calc(100vh - 110px);
-  padding-bottom: 50px;
+  background-color: #f5f5f5;
+  min-height: calc(100vh - 60px);
+  position: relative;
 }
 
 .cart-header {
@@ -454,6 +454,13 @@ const batchCheckout = () => {
   font-size: 20px;
   color: #303133;
   font-weight: 600;
+}
+
+.cart-content {
+  padding-bottom: 90px; /* 为底部结算栏留出空间 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  height: calc(100vh - 60px);
 }
 
 .cart-window-group {
@@ -631,153 +638,114 @@ const batchCheckout = () => {
 
 .cart-footer {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.98);
-  padding: 6px 12px;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  height: 60px;
+  background: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  z-index: 100;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  height: 50px;
+  padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .footer-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .total-info {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 4px;
+  font-size: 14px;
+}
+
+.total-info span:first-child {
+  color: #333;
 }
 
 .total-price {
-  color: #f56c6c;
-  font-size: 18px;
-  font-weight: 600;
+  color: #ff5339;
+  font-size: 20px;
+  font-weight: 500;
 }
 
-/* 调整内容区域，为底部结算栏留出空间 */
-.cart-content {
-  -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
-  height: calc(100vh - 110px);
-  padding-bottom: 5px;
+.total-price::before {
+  content: '¥';
+  font-size: 14px;
+  margin-right: 2px;
 }
 
-/* 响应式调整 */
+:deep(.el-button--primary) {
+  background: #ff5339;
+  border: none;
+  border-radius: 20px;
+  padding: 0 24px;
+  height: 36px;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+:deep(.el-button--primary.is-disabled) {
+  background: #ffccc7;
+  color: #fff;
+  border: none;
+}
+
+:deep(.el-checkbox__input) {
+  border-color: #ddd;
+}
+
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background-color: #ff5339;
+  border-color: #ff5339;
+}
+
+/* 移动端适配 */
 @media (max-width: 768px) {
-  .cart-page {
-    padding: 8px;
-  }
-  
-  .cart-header {
-    padding: 12px 15px;
-    margin-bottom: 12px;
-  }
-
-  .cart-window-group {
-    margin-bottom: 12px;
-  }
-  
-  .cart-item {
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 12px 12px 40px;
-  }
-  
-  .cart-item-image {
-    margin-bottom: 0;
-    width: 70px;
-    height: 70px;
-    margin-right: 12px;
-  }
-  
-  .cart-item-info {
-    flex: 1;
-    padding: 0 8px;
-  }
-
-  .cart-item-name {
-    font-size: 14px;
-    margin-bottom: 6px;
-  }
-
-  .cart-item-price {
-    font-size: 14px;
-  }
-  
-  .cart-item-actions {
-    margin-top: 0;
-    width: auto;
-  }
-
-  .window-cart-footer {
-    padding: 12px 15px;
+  .cart-content {
+    padding-bottom: 120px;
   }
 
   .cart-footer {
-    padding: 10px 12px;
+    bottom: 50px;
+    width: 100%;
   }
-  
+
   .footer-left {
     gap: 8px;
   }
 
   .total-price {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   :deep(.el-button--primary) {
-    padding: 8px 16px;
+    padding: 0 20px;
+    height: 32px;
   }
 }
 
-/* 针对较窄屏幕的额外优化 */
-@media (max-width: 375px) {
-  .cart-page {
-    padding: 4px;
+/* 暗色模式 */
+@media (prefers-color-scheme: dark) {
+  .cart-footer {
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .cart-header h2 {
-    font-size: 16px;
+  .total-info span:first-child {
+    color: #e0e0e0;
   }
 
-  .cart-item-image {
-    width: 60px;
-    height: 60px;
-  }
-
-  .cart-item {
-    padding: 8px 8px 8px 32px;
-  }
-
-  .item-checkbox {
-    left: 4px;
-  }
-
-  .cart-item-name {
-    font-size: 13px;
-  }
-
-  .cart-item-price {
-    font-size: 14px;
-  }
-
-  :deep(.el-button--primary) {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-
-  :deep(.el-input-number) {
-    width: 90px;
+  :deep(.el-button--primary.is-disabled) {
+    background: rgba(255, 83, 57, 0.4);
   }
 }
 

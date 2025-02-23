@@ -25,7 +25,7 @@ export default {
     const router = useRouter()
     
     const goBack = () => {
-      router.back()
+      router.push('/student/profile')
     }
     
     return { goBack }

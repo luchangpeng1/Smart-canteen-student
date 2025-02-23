@@ -8,12 +8,7 @@
         </el-header>
 
         <el-main>
-          <div 
-            class="touch-container"
-            @touchstart="handleTouchStart"
-            @touchmove="handleTouchMove"
-            @touchend="handleTouchEnd"
-          >
+          <div class="touch-container">
             <router-view v-slot="{ Component }">
               <transition
                 name="page"
@@ -225,68 +220,20 @@ export default {
       transitionDepth.value -= 1
     }
 
-    // 添加触摸相关的状态
+    // 移除触摸相关的状态和方法
     const touchStart = ref({ x: 0, y: 0 })
     const touchEnd = ref({ x: 0, y: 0 })
-    const minSwipeDistance = 50 // 最小滑动距离
-    const maxVerticalDistance = 50 // 最大垂直移动距离
+    const minSwipeDistance = 50
+    const maxVerticalDistance = 50
 
-    // 路由页面顺序配置
-    const pageOrder = [
-      '/student/home',
-      '/student/recommendations',
-      '/student/ai-chat',
-      '/student/orders',
-      '/student/profile'
-    ]
-
-    // 获取当前页面索引
-    const getCurrentPageIndex = () => {
-      return pageOrder.findIndex(path => route.path === path)
-    }
-
-    // 处理触摸开始
-    const handleTouchStart = (event) => {
-      touchStart.value = {
-        x: event.touches[0].clientX,
-        y: event.touches[0].clientY
-      }
-    }
-
-    // 处理触摸移动
-    const handleTouchMove = (event) => {
-      touchEnd.value = {
-        x: event.touches[0].clientX,
-        y: event.touches[0].clientY
-      }
-    }
-
-    // 处理触摸结束
-    const handleTouchEnd = () => {
-      const deltaX = touchEnd.value.x - touchStart.value.x
-      const deltaY = Math.abs(touchEnd.value.y - touchStart.value.y)
-      const currentIndex = getCurrentPageIndex()
-
-      // 如果垂直移动距离太大，不触发页面切换
-      if (deltaY > maxVerticalDistance) return
-
-      // 检查是否满足最小滑动距离
-      if (Math.abs(deltaX) > minSwipeDistance) {
-        if (deltaX > 0 && currentIndex > 0) {
-          // 向右滑动，切换到上一页
-          router.push(pageOrder[currentIndex - 1])
-        } else if (deltaX < 0 && currentIndex < pageOrder.length - 1) {
-          // 向左滑动，切换到下一页
-          router.push(pageOrder[currentIndex + 1])
-        }
-      }
-    }
+    const handleTouchStart = () => {}
+    const handleTouchMove = () => {}
+    const handleTouchEnd = () => {}
 
     return {
       isActive,
       navigateTo,
       activeTab,
-      // 图标组件
       Food,
       List,
       User,
